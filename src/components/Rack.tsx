@@ -1,11 +1,9 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { useSynthStore } from '../store/synth-store.ts';
+import { useTheme } from '../store/theme-store.ts';
 import type { ModuleType } from '../types/index.ts';
 import { Cables } from './Cables.tsx';
-
-// ---------- lazy-import panel map ----------
-// Module panels are imported from ./modules/<Name>Panel.tsx.
-// A plain object map keyed by ModuleType avoids a giant switch statement.
+import { AmbientBackground } from './AmbientBackground.tsx';
 
 import VCOPanel from './modules/VCOPanel.tsx';
 import VCFPanel from './modules/VCFPanel.tsx';
@@ -35,25 +33,9 @@ const PANEL_MAP: Record<ModuleType, React.ComponentType<{ moduleId: string }>> =
   oscilloscope: OscilloscopePanel,
 };
 
-// ---------- constants ----------
-
 const MIN_ZOOM = 0.25;
 const MAX_ZOOM = 2.0;
 const ZOOM_SENSITIVITY = 0.001;
-
-// ---------- styles ----------
-
-const rackStyle: React.CSSProperties = {
-  flex: 1,
-  overflow: 'hidden',
-  position: 'relative',
-  // Dot pattern background
-  background: `
-    radial-gradient(circle, #1a1a3e 1px, transparent 1px),
-    #0f0f23
-  `,
-  backgroundSize: '20px 20px',
-};
 
 const canvasStyle: React.CSSProperties = {
   position: 'absolute',
@@ -64,12 +46,11 @@ const canvasStyle: React.CSSProperties = {
   transformOrigin: '0 0',
 };
 
-// ---------- component ----------
-
 export function Rack() {
   const modules = useSynthStore((s) => s.modules);
   const pendingCable = useSynthStore((s) => s.pendingCable);
   const cancelCable = useSynthStore((s) => s.cancelCable);
+  const theme = useTheme();
 
   const [panX, setPanX] = useState(0);
   const [panY, setPanY] = useState(0);
@@ -129,13 +110,19 @@ export function Rack() {
 
   return (
     <div
-      style={rackStyle}
+      style={{
+        flex: 1,
+        overflow: 'hidden',
+        position: 'relative',
+        background: theme.gridBg,
+      }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onWheel={handleWheel}
       onContextMenu={(e) => e.preventDefault()}
     >
+      <AmbientBackground />
       <div
         ref={innerRef}
         style={{

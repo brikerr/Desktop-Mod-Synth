@@ -13,10 +13,10 @@ html, body, #root {
 }
 
 body {
-  font-family: var(--font-ui);
-  background: var(--bg-primary);
+  font-family: 'Roboto Mono', 'SF Mono', 'Fira Code', monospace;
+  background: var(--bg-app);
   color: var(--text-primary);
-  font-size: 13px;
+  font-size: 11px;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -33,18 +33,22 @@ input, select {
   color: inherit;
 }
 
-/* Cable pulse animation */
-@keyframes cablePulse {
-  0%, 100% {
-    opacity: 0.85;
-    filter: brightness(1);
-  }
-  50% {
-    opacity: 0.95;
-    filter: brightness(1.15);
-  }
+select option {
+  background: var(--select-option-bg);
+  color: var(--select-option-text);
 }
 
-.cable-line {
-  animation: cablePulse 3s ease-in-out infinite;
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
 }

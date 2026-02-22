@@ -1,6 +1,7 @@
 import React from 'react';
 import { useSynthStore } from '../store/synth-store.ts';
 import { useToastStore } from '../store/toast-store.ts';
+import { useTheme, useThemeStore } from '../store/theme-store.ts';
 import { getModuleDefinition } from '../audio/graph/port-registry.ts';
 import { hasShownTip, markTipShown } from '../hooks/useFirstAddTracker.ts';
 import type { ModuleType } from '../types/index.ts';
@@ -45,87 +46,14 @@ const MODULE_GROUPS: ModuleGroup[] = [
   },
 ];
 
-const toolbarStyle: React.CSSProperties = {
-  height: 48,
-  background: '#16213e',
-  display: 'flex',
-  flexDirection: 'row',
-  alignItems: 'center',
-  gap: 6,
-  padding: '0 16px',
-  flexShrink: 0,
-  borderBottom: '1px solid rgba(255,255,255,0.06)',
-};
-
-const buttonBase: React.CSSProperties = {
-  background: 'rgba(255,255,255,0.08)',
-  color: '#e0e0e0',
-  border: '1px solid rgba(255,255,255,0.06)',
-  padding: '4px 10px',
-  borderRadius: 4,
-  cursor: 'pointer',
-  fontSize: 12,
-  fontFamily: 'inherit',
-  whiteSpace: 'nowrap',
-  transition: 'background 0.15s, border-color 0.15s',
-};
-
-const buttonDisabled: React.CSSProperties = {
-  ...buttonBase,
-  opacity: 0.3,
-  cursor: 'not-allowed',
-};
-
-const audioReadyStyle: React.CSSProperties = {
-  color: '#4ecdc4',
-  fontSize: 12,
-  fontWeight: 600,
-  marginRight: 4,
-};
-
-const dividerStyle: React.CSSProperties = {
-  width: 1,
-  height: 24,
-  background: '#ffffff15',
-  marginLeft: 2,
-  marginRight: 2,
-};
-
-const groupStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  gap: 1,
-};
-
-const groupLabelStyle: React.CSSProperties = {
-  fontSize: 8,
-  color: '#a0a0b060',
-  textTransform: 'uppercase',
-  letterSpacing: 1,
-  lineHeight: 1,
-  fontFamily: 'sans-serif',
-};
-
-const groupButtonsStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'row',
-  gap: 3,
-};
-
-const startButtonStyle: React.CSSProperties = {
-  ...buttonBase,
-  background: '#533483',
-  border: '1px solid #6b44a0',
-  color: '#fff',
-  fontWeight: 600,
-};
-
 export function Toolbar() {
   const isAudioReady = useSynthStore((s) => s.isAudioReady);
   const initAudio = useSynthStore((s) => s.initAudio);
   const addModule = useSynthStore((s) => s.addModule);
   const addToast = useToastStore((s) => s.addToast);
+  const theme = useTheme();
+  const themeName = useThemeStore((s) => s.themeName);
+  const toggleTheme = useThemeStore((s) => s.toggleTheme);
 
   const handleAddModule = React.useCallback((type: ModuleType) => {
     addModule(type);
@@ -140,19 +68,59 @@ export function Toolbar() {
 
   const [hoveredKey, setHoveredKey] = React.useState<string | null>(null);
 
+  const buttonBase: React.CSSProperties = {
+    background: theme.bgControl,
+    color: theme.textPrimary,
+    border: `1px solid ${theme.borderSubtle}`,
+    padding: '6px 14px',
+    borderRadius: theme.borderRadius,
+    cursor: 'pointer',
+    fontSize: 12,
+    fontFamily: theme.fontBase,
+    whiteSpace: 'nowrap',
+    transition: 'background 0.1s',
+  };
+
+  const buttonDisabled: React.CSSProperties = {
+    ...buttonBase,
+    opacity: 0.3,
+    cursor: 'not-allowed',
+  };
+
   return (
-    <div style={toolbarStyle}>
-      {/* Audio init button */}
+    <div style={{
+      height: 56,
+      background: theme.bgToolbar,
+      display: 'flex',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      padding: '0 20px',
+      flexShrink: 0,
+      borderBottom: `1px solid ${theme.borderSubtle}`,
+    }}>
       {isAudioReady ? (
-        <span style={audioReadyStyle}>Audio Ready</span>
+        <span style={{
+          color: theme.audioReady,
+          fontSize: 12,
+          fontWeight: 600,
+          fontFamily: theme.fontBase,
+          marginRight: 6,
+        }}>Audio Ready</span>
       ) : (
         <button
-          style={startButtonStyle}
+          style={{
+            ...buttonBase,
+            background: theme.accent,
+            border: `1px solid ${theme.accentHover}`,
+            color: '#fff',
+            fontWeight: 600,
+          }}
           onMouseEnter={(e) => {
-            (e.currentTarget.style.background = '#6b44a0');
+            e.currentTarget.style.background = theme.accentHover;
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget.style.background = '#533483');
+            e.currentTarget.style.background = theme.accent;
           }}
           onClick={() => initAudio()}
         >
@@ -160,15 +128,23 @@ export function Toolbar() {
         </button>
       )}
 
-      <div style={dividerStyle} />
+      <div style={{ width: 1, height: 28, background: theme.borderSubtle, marginLeft: 4, marginRight: 4 }} />
 
-      {/* Grouped module palette */}
       {MODULE_GROUPS.map((group, gi) => (
         <React.Fragment key={group.label}>
-          {gi > 0 && <div style={dividerStyle} />}
-          <div style={groupStyle}>
-            <span style={groupLabelStyle}>{group.label}</span>
-            <div style={groupButtonsStyle}>
+          {gi > 0 && (
+            <div style={{ width: 1, height: 28, background: theme.borderSubtle, marginLeft: 4, marginRight: 4 }} />
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+            <span style={{
+              fontSize: 9,
+              color: theme.textMuted,
+              textTransform: 'uppercase',
+              letterSpacing: 1.2,
+              lineHeight: 1,
+              fontFamily: theme.fontBase,
+            }}>{group.label}</span>
+            <div style={{ display: 'flex', flexDirection: 'row', gap: 5 }}>
               {group.modules.map((m) => {
                 const disabled = !isAudioReady;
                 const isHovered = hoveredKey === m.type && !disabled;
@@ -180,10 +156,10 @@ export function Toolbar() {
                     style={{
                       ...(disabled ? buttonDisabled : buttonBase),
                       background: disabled
-                        ? 'rgba(255,255,255,0.04)'
+                        ? `${theme.bgControl}66`
                         : isHovered
-                          ? 'rgba(255,255,255,0.15)'
-                          : 'rgba(255,255,255,0.08)',
+                          ? theme.borderControl
+                          : theme.bgControl,
                     }}
                     onMouseEnter={() => setHoveredKey(m.type)}
                     onMouseLeave={() => setHoveredKey(null)}
@@ -197,6 +173,23 @@ export function Toolbar() {
           </div>
         </React.Fragment>
       ))}
+
+      {/* Spacer */}
+      <div style={{ flex: 1 }} />
+
+      {/* Theme toggle */}
+      <button
+        style={{
+          ...buttonBase,
+          fontSize: 16,
+          padding: '2px 8px',
+          lineHeight: 1,
+        }}
+        onClick={toggleTheme}
+        title={`Switch to ${themeName === 'dark' ? 'light' : 'dark'} mode`}
+      >
+        {themeName === 'dark' ? '\u263C' : '\u263E'}
+      </button>
     </div>
   );
 }

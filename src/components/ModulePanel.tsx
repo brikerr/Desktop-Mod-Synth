@@ -1,10 +1,11 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { useSynthStore } from '../store/synth-store.ts';
 import { getModuleDefinition } from '../audio/graph/port-registry.ts';
 import { getModuleColor } from '../styles/module-colors.ts';
+import { useTheme } from '../store/theme-store.ts';
 import { ModuleAccentContext } from './controls/ModuleAccentContext.tsx';
 import Port from './controls/Port.tsx';
-import ModuleDescription from './hints/ModuleDescription.tsx';
+import Tooltip from './hints/Tooltip.tsx';
 import PatchSuggestion from './hints/PatchSuggestion.tsx';
 import type { PortDefinition } from '../types/index.ts';
 
@@ -19,10 +20,13 @@ const ModulePanel: React.FC<ModulePanelProps> = ({ moduleId, children }) => {
   const moveModule = useSynthStore((s) => s.moveModule);
   const startCable = useSynthStore((s) => s.startCable);
   const completeCable = useSynthStore((s) => s.completeCable);
+  const theme = useTheme();
 
   const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(
     null,
   );
+  const labelRef = useRef<HTMLSpanElement>(null);
+  const [labelHoverRect, setLabelHoverRect] = useState<DOMRect | null>(null);
 
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
@@ -84,93 +88,92 @@ const ModulePanel: React.FC<ModulePanelProps> = ({ moduleId, children }) => {
   const inputPorts = definition.ports.filter((p) => p.direction === 'input');
   const outputPorts = definition.ports.filter((p) => p.direction === 'output');
 
-  // --- Styles ---
-  const panelStyle: React.CSSProperties = {
-    minWidth: 200,
-    background: '#0f3460',
-    borderRadius: 6,
-    boxShadow: `0 4px 12px rgba(0,0,0,0.5), 0 0 1px ${colors.primary}40`,
-    border: `1px solid ${colors.primary}30`,
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
-  };
-
-  const headerStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
-    padding: '6px 10px',
-    cursor: 'grab',
-    userSelect: 'none',
-  };
-
-  const titleStyle: React.CSSProperties = {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: 600,
-    fontFamily: 'sans-serif',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-    textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-  };
-
-  const deleteButtonStyle: React.CSSProperties = {
-    background: 'none',
-    border: 'none',
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 16,
-    cursor: 'pointer',
-    padding: '0 4px',
-    lineHeight: 1,
-  };
-
-  const bodyStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'row',
-    padding: 8,
-    gap: 8,
-    alignItems: 'flex-start',
-  };
-
-  const portColumnStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 6,
-    alignItems: 'center',
-    minWidth: 40,
-  };
-
-  const contentStyle: React.CSSProperties = {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 8,
-  };
-
   return (
     <ModuleAccentContext.Provider value={colors}>
-      <div style={panelStyle}>
-        <div style={headerStyle} onMouseDown={handleHeaderMouseDown}>
-          <span style={titleStyle}>{definition.label}</span>
-          <button style={deleteButtonStyle} onClick={handleDelete} title="Remove module">
+      <div style={{
+        minWidth: 200,
+        background: theme.bgPanel,
+        borderRadius: theme.borderRadius,
+        border: `1px solid ${theme.borderSubtle}`,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            background: theme.bgPanelHeader,
+            borderBottom: `3px solid ${colors.primary}`,
+            padding: '4px 8px',
+            cursor: 'grab',
+            userSelect: 'none',
+          }}
+          onMouseDown={handleHeaderMouseDown}
+        >
+          <span
+            ref={labelRef}
+            style={{
+              color: theme.textPrimary,
+              fontSize: theme.fontSize,
+              fontWeight: 600,
+              fontFamily: theme.fontBase,
+              letterSpacing: 0.5,
+              textTransform: 'uppercase',
+              cursor: 'help',
+            }}
+            onMouseEnter={() => {
+              if (labelRef.current && definition.description) {
+                setLabelHoverRect(labelRef.current.getBoundingClientRect());
+              }
+            }}
+            onMouseLeave={() => setLabelHoverRect(null)}
+          >
+            {definition.label}
+            {labelHoverRect && definition.description && (
+              <Tooltip anchorRect={labelHoverRect} maxWidth={260}>
+                <div style={{ fontWeight: 600, marginBottom: 4 }}>{definition.label}</div>
+                <div style={{ color: theme.textSecondary, fontSize: theme.fontSizeLabel }}>
+                  {definition.detailedDescription || definition.description}
+                </div>
+              </Tooltip>
+            )}
+          </span>
+          <button
+            style={{
+              background: 'none',
+              border: 'none',
+              color: theme.deleteButton,
+              fontSize: 14,
+              cursor: 'pointer',
+              padding: '0 4px',
+              lineHeight: 1,
+            }}
+            onClick={handleDelete}
+            title="Remove module"
+          >
             X
           </button>
         </div>
 
-        <ModuleDescription
-          description={definition.description}
-          detailedDescription={definition.detailedDescription}
-        />
-
-        <div style={bodyStyle}>
-          {/* Input ports column */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'row',
+          padding: 6,
+          gap: 6,
+          alignItems: 'flex-start',
+        }}>
           {inputPorts.length > 0 && (
-            <div style={portColumnStyle}>
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 4,
+              alignItems: 'flex-start',
+              minWidth: 40,
+            }}>
               {inputPorts.map((port) => (
-                <div key={port.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                <div key={port.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1 }}>
                   <Port
                     portId={port.id}
                     moduleId={moduleId}
@@ -186,14 +189,24 @@ const ModulePanel: React.FC<ModulePanelProps> = ({ moduleId, children }) => {
             </div>
           )}
 
-          {/* Module-specific controls */}
-          <div style={contentStyle}>{children}</div>
+          <div style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 6,
+          }}>{children}</div>
 
-          {/* Output ports column */}
           {outputPorts.length > 0 && (
-            <div style={portColumnStyle}>
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 4,
+              alignItems: 'flex-end',
+              minWidth: 40,
+            }}>
               {outputPorts.map((port) => (
-                <div key={port.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                <div key={port.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
                   <Port
                     portId={port.id}
                     moduleId={moduleId}

@@ -1,0 +1,42 @@
+:root {
+  /* Colors */
+  --bg-primary: #1a1a2e;
+  --bg-secondary: #16213e;
+  --bg-panel: #0f3460;
+  --bg-panel-header: #533483;
+  --text-primary: #e0e0e0;
+  --text-secondary: #a0a0b0;
+  --accent: #e94560;
+  --accent-hover: #ff6b81;
+
+  /* Port colors by signal type */
+  --port-audio: #e94560;
+  --port-cv: #4ecdc4;
+  --port-gate: #ffe66d;
+
+  /* Cable colors (brighter for glow) */
+  --cable-audio: #ff4d6d;
+  --cable-cv: #5bf5e8;
+  --cable-gate: #ffed4a;
+
+  /* Controls */
+  --knob-bg: #2a2a4a;
+  --knob-indicator: #e94560;
+  --slider-track: #2a2a4a;
+  --slider-fill: #4ecdc4;
+
+  /* Spacing */
+  --toolbar-height: 48px;
+  --keyboard-height: 120px;
+  --module-port-size: 16px;
+  --module-min-width: 200px;
+  --module-header-height: 32px;
+
+  /* Borders */
+  --border-radius: 6px;
+  --border-color: #333366;
+
+  /* Fonts */
+  --font-ui: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+}

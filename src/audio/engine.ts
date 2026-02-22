@@ -124,10 +124,10 @@ export class AudioEngine {
     }
   }
 
-  noteOff(keyboardModuleId: string): void {
+  noteOff(keyboardModuleId: string, midiNote: number): void {
     const node = this.nodes.get(keyboardModuleId);
     if (node) {
-      node.port.postMessage({ type: 'noteOff' });
+      node.port.postMessage({ type: 'noteOff', note: midiNote });
     }
   }
 }

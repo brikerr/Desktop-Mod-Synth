@@ -128,8 +128,14 @@ const moduleDefinitions: Record<ModuleType, ModuleDefinition> = {
       octave: 0,
     },
     ports: [
-      { id: 'pitch_cv_out', name: 'Pitch CV', direction: 'output', signal: 'cv', index: 0, description: 'Pitch control voltage (1V/oct)', suggestedTargets: ['VCO'] },
-      { id: 'gate_out', name: 'Gate', direction: 'output', signal: 'gate', index: 1, description: 'Gate signal — high while key is held', suggestedTargets: ['Envelope'] },
+      { id: 'pitch_cv_1', name: 'Pitch 1', direction: 'output', signal: 'cv', index: 0, description: 'Voice 1 pitch CV (1V/oct)', suggestedTargets: ['VCO'] },
+      { id: 'gate_1', name: 'Gate 1', direction: 'output', signal: 'gate', index: 1, description: 'Voice 1 gate — high while key held', suggestedTargets: ['Envelope'] },
+      { id: 'pitch_cv_2', name: 'Pitch 2', direction: 'output', signal: 'cv', index: 2, description: 'Voice 2 pitch CV (1V/oct)', suggestedTargets: ['VCO'] },
+      { id: 'gate_2', name: 'Gate 2', direction: 'output', signal: 'gate', index: 3, description: 'Voice 2 gate — high while key held', suggestedTargets: ['Envelope'] },
+      { id: 'pitch_cv_3', name: 'Pitch 3', direction: 'output', signal: 'cv', index: 4, description: 'Voice 3 pitch CV (1V/oct)', suggestedTargets: ['VCO'] },
+      { id: 'gate_3', name: 'Gate 3', direction: 'output', signal: 'gate', index: 5, description: 'Voice 3 gate — high while key held', suggestedTargets: ['Envelope'] },
+      { id: 'pitch_cv_4', name: 'Pitch 4', direction: 'output', signal: 'cv', index: 6, description: 'Voice 4 pitch CV (1V/oct)', suggestedTargets: ['VCO'] },
+      { id: 'gate_4', name: 'Gate 4', direction: 'output', signal: 'gate', index: 7, description: 'Voice 4 gate — high while key held', suggestedTargets: ['Envelope'] },
     ],
   },
   output: {

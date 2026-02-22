@@ -5,8 +5,8 @@ export function createKeyboardNode(ctx: AudioContext, params: Record<string, num
     moduleType: 'keyboard',
     processorName: 'keyboard-processor',
     numberOfInputs: 0,
-    numberOfOutputs: 2,
-    outputChannelCount: [1, 1],
+    numberOfOutputs: 8,
+    outputChannelCount: [1, 1, 1, 1, 1, 1, 1, 1],
     parameterData: {
       octave: params.octave ?? 0,
     },

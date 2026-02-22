@@ -39,7 +39,7 @@ interface SynthStore {
   completeCable: (dest: PortRef) => string | null;
   setupDefaultPatch: () => void;
   noteOn: (midiNote: number) => void;
-  noteOff: () => void;
+  noteOff: (midiNote: number) => void;
 }
 
 export const useSynthStore = create<SynthStore>((set, get) => ({
@@ -229,28 +229,63 @@ export const useSynthStore = create<SynthStore>((set, get) => ({
 
   setupDefaultPatch: () => {
     const s = get();
-    // Classic subtractive voice layout:
-    //   Keyboard → VCO → VCF → VCA → Output
-    //   Envelope → VCA (cv), Keyboard gate → Envelope
-    const kbd  = s.addModuleAt('keyboard', 40,  60);
-    const vco  = s.addModuleAt('vco',      300, 40);
-    const vcf  = s.addModuleAt('vcf',      560, 40);
-    const env  = s.addModuleAt('envelope', 300, 340);
-    const vca  = s.addModuleAt('vca',      820, 60);
-    const out  = s.addModuleAt('output',   1060, 60);
+    // 4-voice polyphonic patch:
+    //   Keyboard (4 voice pairs) → 4x (VCO → VCA) → Mixer → Output
+    //   Each voice: Pitch CV → VCO, Gate → Envelope → VCA
 
-    // Keyboard pitch → VCO pitch
-    s.addConnection({ moduleId: kbd, portId: 'pitch_cv_out' }, { moduleId: vco, portId: 'pitch_cv' });
-    // Keyboard gate → Envelope gate
-    s.addConnection({ moduleId: kbd, portId: 'gate_out' }, { moduleId: env, portId: 'gate_in' });
-    // VCO → VCF
-    s.addConnection({ moduleId: vco, portId: 'audio_out' }, { moduleId: vcf, portId: 'audio_in' });
-    // VCF → VCA
-    s.addConnection({ moduleId: vcf, portId: 'audio_out' }, { moduleId: vca, portId: 'audio_in' });
-    // Envelope → VCA CV
-    s.addConnection({ moduleId: env, portId: 'envelope_out' }, { moduleId: vca, portId: 'cv_in' });
-    // VCA → Output left
-    s.addConnection({ moduleId: vca, portId: 'audio_out' }, { moduleId: out, portId: 'audio_in_left' });
+    const kbd = s.addModuleAt('keyboard', 40, 160);
+
+    // Voice chains — 4 rows
+    const voiceY = [40, 200, 360, 520];
+    const vcos: string[] = [];
+    const envs: string[] = [];
+    const vcas: string[] = [];
+
+    for (let v = 0; v < 4; v++) {
+      const y = voiceY[v];
+      vcos.push(s.addModuleAt('vco', 320, y));
+      envs.push(s.addModuleAt('envelope', 560, y));
+      vcas.push(s.addModuleAt('vca', 800, y));
+    }
+
+    const mixer = s.addModuleAt('mixer', 1060, 200);
+    const out = s.addModuleAt('output', 1300, 200);
+
+    // Wire up each voice
+    for (let v = 0; v < 4; v++) {
+      const voiceNum = v + 1;
+      // Keyboard pitch → VCO pitch
+      s.addConnection(
+        { moduleId: kbd, portId: `pitch_cv_${voiceNum}` },
+        { moduleId: vcos[v], portId: 'pitch_cv' },
+      );
+      // Keyboard gate → Envelope gate
+      s.addConnection(
+        { moduleId: kbd, portId: `gate_${voiceNum}` },
+        { moduleId: envs[v], portId: 'gate_in' },
+      );
+      // VCO → VCA audio
+      s.addConnection(
+        { moduleId: vcos[v], portId: 'audio_out' },
+        { moduleId: vcas[v], portId: 'audio_in' },
+      );
+      // Envelope → VCA CV
+      s.addConnection(
+        { moduleId: envs[v], portId: 'envelope_out' },
+        { moduleId: vcas[v], portId: 'cv_in' },
+      );
+      // VCA → Mixer input
+      s.addConnection(
+        { moduleId: vcas[v], portId: 'audio_out' },
+        { moduleId: mixer, portId: `input_${voiceNum}` },
+      );
+    }
+
+    // Mixer → Output
+    s.addConnection(
+      { moduleId: mixer, portId: 'mix_out' },
+      { moduleId: out, portId: 'audio_in_left' },
+    );
 
     nextModuleX = 40;
   },
@@ -265,11 +300,11 @@ export const useSynthStore = create<SynthStore>((set, get) => ({
     }
   },
 
-  noteOff: () => {
+  noteOff: (midiNote: number) => {
     const state = get();
     for (const mod of Object.values(state.modules)) {
       if (mod.type === 'keyboard') {
-        audioEngine.noteOff(mod.id);
+        audioEngine.noteOff(mod.id, midiNote);
       }
     }
   },

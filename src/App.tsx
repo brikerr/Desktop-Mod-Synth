@@ -1,8 +1,6 @@
 import { Toolbar } from './components/Toolbar.tsx';
 import { Rack } from './components/Rack.tsx';
 import { Keyboard } from './components/Keyboard.tsx';
-import ToastContainer from './components/hints/ToastNotification.tsx';
-
 export default function App() {
   return (
     <div style={{
@@ -14,7 +12,6 @@ export default function App() {
       <Toolbar />
       <Rack />
       <Keyboard />
-      <ToastContainer />
     </div>
   );
 }

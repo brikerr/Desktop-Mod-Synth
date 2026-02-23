@@ -1,9 +1,6 @@
 import React from 'react';
 import { useSynthStore } from '../store/synth-store.ts';
-import { useToastStore } from '../store/toast-store.ts';
 import { useTheme, useThemeStore } from '../store/theme-store.ts';
-import { getModuleDefinition } from '../audio/graph/port-registry.ts';
-import { hasShownTip, markTipShown } from '../hooks/useFirstAddTracker.ts';
 import { moduleColors } from '../styles/module-colors.ts';
 import type { ModuleType } from '../types/index.ts';
 import { midiManager } from '../audio/midi-manager.ts';
@@ -60,7 +57,6 @@ export function Toolbar() {
   const initAudio = useSynthStore((s) => s.initAudio);
   const shutdownAudio = useSynthStore((s) => s.shutdownAudio);
   const addModule = useSynthStore((s) => s.addModule);
-  const addToast = useToastStore((s) => s.addToast);
   const theme = useTheme();
   const themeName = useThemeStore((s) => s.themeName);
   const toggleTheme = useThemeStore((s) => s.toggleTheme);
@@ -110,14 +106,7 @@ export function Toolbar() {
   const handleAddModule = React.useCallback((type: ModuleType) => {
     addModule(type);
     setOpenGroup(null);
-    if (!hasShownTip(type)) {
-      const def = getModuleDefinition(type);
-      if (def.firstAddTip) {
-        addToast(def.firstAddTip, type);
-      }
-      markTipShown(type);
-    }
-  }, [addModule, addToast]);
+  }, [addModule]);
 
   const handleToggleGroup = React.useCallback((label: string) => {
     setOpenGroup((prev) => (prev === label ? null : label));

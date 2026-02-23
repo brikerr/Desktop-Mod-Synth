@@ -7,6 +7,7 @@ import { hasShownTip, markTipShown } from '../hooks/useFirstAddTracker.ts';
 import { moduleColors } from '../styles/module-colors.ts';
 import type { ModuleType } from '../types/index.ts';
 import { midiManager } from '../audio/midi-manager.ts';
+import { PresetSelector } from './PresetSelector.tsx';
 
 interface ModuleGroup {
   label: string;
@@ -205,6 +206,11 @@ export function Toolbar() {
       >
         <span className="material-symbols-outlined" style={{ fontSize: 22 }}>power_settings_new</span>
       </button>
+
+      <div style={{ width: 1, height: 28, background: theme.borderSubtle, marginLeft: 4, marginRight: 4, flexShrink: 0 }} />
+
+      {/* Preset selector */}
+      <PresetSelector />
 
       <div style={{ width: 1, height: 28, background: theme.borderSubtle, marginLeft: 4, marginRight: 4, flexShrink: 0 }} />
 

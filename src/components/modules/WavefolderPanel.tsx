@@ -23,7 +23,6 @@ const WavefolderPanel: React.FC<WavefolderPanelProps> = ({ moduleId }) => {
     flexDirection: 'row',
     gap: 14,
     alignItems: 'flex-start',
-    flexWrap: 'wrap',
     justifyContent: 'center',
   };
 

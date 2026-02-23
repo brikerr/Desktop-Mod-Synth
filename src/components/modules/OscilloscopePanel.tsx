@@ -155,7 +155,6 @@ const OscilloscopePanel: React.FC<OscilloscopePanelProps> = ({ moduleId }) => {
         flexDirection: 'row',
         gap: 14,
         alignItems: 'flex-start',
-        flexWrap: 'wrap',
         justifyContent: 'center',
       }}>
         <Knob label="Time/Div" value={params.timeDiv} min={1} max={50} step={1} onChange={set('timeDiv')} />

@@ -30,7 +30,6 @@ const VCFPanel: React.FC<VCFPanelProps> = ({ moduleId }) => {
     flexDirection: 'row',
     gap: 14,
     alignItems: 'flex-start',
-    flexWrap: 'wrap',
     justifyContent: 'center',
   };
 

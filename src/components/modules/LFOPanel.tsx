@@ -32,7 +32,6 @@ const LFOPanel: React.FC<LFOPanelProps> = ({ moduleId }) => {
     flexDirection: 'row',
     gap: 14,
     alignItems: 'flex-start',
-    flexWrap: 'wrap',
     justifyContent: 'center',
   };
 

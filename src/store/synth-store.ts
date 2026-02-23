@@ -2,10 +2,13 @@ import { create } from 'zustand';
 import type { ModuleType, ModuleInstance, CableConnection, PortRef, SignalType } from '../types/index.ts';
 import { audioEngine } from '../audio/engine.ts';
 import { getModuleDefinition } from '../audio/graph/port-registry.ts';
+import type { Preset } from '../presets/types.ts';
+import { setActivePresetId } from '../presets/preset-storage.ts';
 
 let nextModuleId = 1;
 let nextConnectionId = 1;
 let nextModuleX = 60;
+let _skipDefaultPatch = false;
 
 function generateModuleId(): string {
   return `mod_${nextModuleId++}`;
@@ -25,6 +28,7 @@ interface SynthStore {
   connections: Record<string, CableConnection>;
   isAudioReady: boolean;
   pendingCable: PendingCable | null;
+  activePresetId: string | null;
 
   initAudio: () => Promise<void>;
   shutdownAudio: () => Promise<void>;
@@ -39,6 +43,7 @@ interface SynthStore {
   cancelCable: () => void;
   completeCable: (dest: PortRef) => string | null;
   setupDefaultPatch: () => void;
+  loadPreset: (preset: Preset) => Promise<void>;
   noteOn: (midiNote: number) => void;
   noteOff: (midiNote: number) => void;
 }
@@ -48,13 +53,14 @@ export const useSynthStore = create<SynthStore>((set, get) => ({
   connections: {},
   isAudioReady: false,
   pendingCable: null,
+  activePresetId: null,
 
   initAudio: async () => {
     try {
       await audioEngine.init();
       set({ isAudioReady: true });
-      // Auto-setup default patch if no modules exist
-      if (Object.keys(get().modules).length === 0) {
+      // Auto-setup default patch if no modules exist (unless loading a preset)
+      if (Object.keys(get().modules).length === 0 && !_skipDefaultPatch) {
         get().setupDefaultPatch();
       }
     } catch (err) {
@@ -301,6 +307,55 @@ export const useSynthStore = create<SynthStore>((set, get) => ({
     );
 
     nextModuleX = 40;
+  },
+
+  loadPreset: async (preset: Preset) => {
+    const s = get();
+
+    // 1. Cancel pending cable
+    s.cancelCable();
+
+    // 2. Shutdown audio — clears modules, connections, resets ID counters
+    await s.shutdownAudio();
+
+    // 3-5. Re-init audio without creating default patch
+    _skipDefaultPatch = true;
+    await s.initAudio();
+    _skipDefaultPatch = false;
+
+    // 6. Add modules and build symbolic→real ID map
+    const idMap: Record<string, string> = {};
+    for (const pm of preset.modules) {
+      const realId = get().addModuleAt(pm.type, pm.x, pm.y);
+      idMap[pm.id] = realId;
+    }
+
+    // 7. Apply non-default params
+    for (const pm of preset.modules) {
+      const realId = idMap[pm.id];
+      const def = getModuleDefinition(pm.type);
+      for (const [key, value] of Object.entries(pm.params)) {
+        if (def.defaultParams[key] !== value) {
+          get().updateParam(realId, key, value);
+        }
+      }
+    }
+
+    // 8. Add connections using remapped IDs
+    for (const pc of preset.connections) {
+      const sourceId = idMap[pc.sourceModuleId];
+      const destId = idMap[pc.destModuleId];
+      if (sourceId && destId) {
+        get().addConnection(
+          { moduleId: sourceId, portId: pc.sourcePortId },
+          { moduleId: destId, portId: pc.destPortId },
+        );
+      }
+    }
+
+    // Track active preset
+    set({ activePresetId: preset.id });
+    setActivePresetId(preset.id);
   },
 
   noteOn: (midiNote: number) => {

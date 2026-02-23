@@ -57,7 +57,8 @@ function Cable({ connection, containerEl, tick: _tick }: CableProps) {
   const removeConnection = useSynthStore((s) => s.removeConnection);
   const theme = useTheme();
   const pathRef = useRef<SVGPathElement>(null);
-  const texRef = useRef<SVGPathElement>(null);
+  const tex1Ref = useRef<SVGPathElement>(null);
+  const tex2Ref = useRef<SVGPathElement>(null);
   const rafRef = useRef(0);
 
   const springRef = useRef({
@@ -112,7 +113,8 @@ function Cable({ connection, containerEl, tick: _tick }: CableProps) {
           if (sp.lastSrc && sp.lastDst) {
             const d = cablePath(sp.lastSrc, sp.lastDst, sp.offset);
             pathRef.current?.setAttribute('d', d);
-            texRef.current?.setAttribute('d', d);
+            tex1Ref.current?.setAttribute('d', d);
+            tex2Ref.current?.setAttribute('d', d);
           }
 
           if (Math.abs(sp.vel) > SETTLE_THRESHOLD || Math.abs(sp.offset) > SETTLE_THRESHOLD) {
@@ -124,7 +126,8 @@ function Cable({ connection, containerEl, tick: _tick }: CableProps) {
             if (sp.lastSrc && sp.lastDst) {
               const d = cablePath(sp.lastSrc, sp.lastDst, 0);
               pathRef.current?.setAttribute('d', d);
-              texRef.current?.setAttribute('d', d);
+              tex1Ref.current?.setAttribute('d', d);
+            tex2Ref.current?.setAttribute('d', d);
             }
           }
         };
@@ -162,15 +165,26 @@ function Cable({ connection, containerEl, tick: _tick }: CableProps) {
         strokeLinecap="round"
         style={{ pointerEvents: 'stroke' }}
       />
-      {/* Texture highlight — subtle dashed lighter stripe */}
+      {/* Woven texture — lighter tint + darker shade, staggered */}
       <path
-        ref={texRef}
+        ref={tex1Ref}
         d={d}
-        stroke="rgba(255,255,255,0.25)"
+        stroke={`${color}88`}
         strokeWidth={theme.cableWidth - 0.5}
         fill="none"
         strokeLinecap="round"
-        strokeDasharray="2 4"
+        strokeDasharray="2 6"
+        style={{ pointerEvents: 'none' }}
+      />
+      <path
+        ref={tex2Ref}
+        d={d}
+        stroke="rgba(0,0,0,0.2)"
+        strokeWidth={theme.cableWidth - 0.5}
+        fill="none"
+        strokeLinecap="round"
+        strokeDasharray="2 6"
+        strokeDashoffset={3}
         style={{ pointerEvents: 'none' }}
       />
     </g>

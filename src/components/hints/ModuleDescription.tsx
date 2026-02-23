@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import Tooltip from './Tooltip.tsx';
+import { useTheme } from '../../store/theme-store.ts';
 
 interface ModuleDescriptionProps {
   description?: string;
@@ -7,6 +8,7 @@ interface ModuleDescriptionProps {
 }
 
 const ModuleDescription: React.FC<ModuleDescriptionProps> = ({ description, detailedDescription }) => {
+  const theme = useTheme();
   const ref = useRef<HTMLDivElement>(null);
   const [hoverRect, setHoverRect] = useState<DOMRect | null>(null);
 
@@ -16,11 +18,11 @@ const ModuleDescription: React.FC<ModuleDescriptionProps> = ({ description, deta
     <div
       ref={ref}
       style={{
-        padding: '2px 10px 4px',
-        fontSize: 10,
+        padding: '2px 8px 4px',
+        fontSize: theme.fontSizeLabel,
         fontStyle: 'italic',
-        color: '#a0a0b080',
-        fontFamily: 'sans-serif',
+        color: theme.textMuted,
+        fontFamily: theme.fontBase,
         lineHeight: 1.3,
         cursor: detailedDescription ? 'help' : 'default',
       }}
@@ -34,7 +36,7 @@ const ModuleDescription: React.FC<ModuleDescriptionProps> = ({ description, deta
       {description}
       {hoverRect && detailedDescription && (
         <Tooltip anchorRect={hoverRect} maxWidth={280}>
-          <div style={{ color: '#d0d0e0', fontSize: 11 }}>{detailedDescription}</div>
+          <div style={{ color: theme.textPrimary, fontSize: theme.fontSize }}>{detailedDescription}</div>
         </Tooltip>
       )}
     </div>

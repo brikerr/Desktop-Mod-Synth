@@ -61,7 +61,6 @@ const StepSequencerPanel: React.FC<StepSequencerPanelProps> = ({ moduleId }) => 
         flexDirection: 'row',
         gap: 3,
         justifyContent: 'center',
-        flexWrap: 'wrap',
       }}>
         {Array.from({ length: 8 }, (_, i) => {
           const isActive = i === activeStep;
@@ -137,9 +136,8 @@ const StepSequencerPanel: React.FC<StepSequencerPanelProps> = ({ moduleId }) => 
       <div style={{
         display: 'flex',
         flexDirection: 'row',
-        gap: 10,
+        gap: 14,
         alignItems: 'flex-start',
-        flexWrap: 'wrap',
         justifyContent: 'center',
       }}>
         <Knob label="Gate Len" value={params.gateLength} min={0.1} max={0.9} step={0.01} onChange={set('gateLength')} />

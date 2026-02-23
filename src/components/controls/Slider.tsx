@@ -1,5 +1,6 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { useAccentColor } from './ModuleAccentContext.tsx';
+import { useTheme } from '../../store/theme-store.ts';
 
 interface SliderProps {
   label: string;
@@ -18,7 +19,6 @@ function formatValue(value: number): string {
   return value.toFixed(2);
 }
 
-/** Vertical slider with filled track and draggable thumb. */
 const Slider: React.FC<SliderProps> = ({
   label,
   value,
@@ -29,6 +29,7 @@ const Slider: React.FC<SliderProps> = ({
   height = 80,
 }) => {
   const accent = useAccentColor();
+  const theme = useTheme();
   const trackRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -84,116 +85,96 @@ const Slider: React.FC<SliderProps> = ({
   );
 
   const fraction = max !== min ? (value - min) / (max - min) : 0;
-  const trackWidth = 6;
-  const thumbWidth = 18;
+  const trackWidth = 4;
+  const thumbWidth = 16;
   const thumbHeight = 4;
   const totalWidth = Math.max(thumbWidth, trackWidth) + 4;
 
-  const containerStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 2,
-    userSelect: 'none',
-  };
-
-  const labelStyle: React.CSSProperties = {
-    color: '#a0a0b0',
-    fontSize: 10,
-    fontFamily: 'sans-serif',
-    textAlign: 'center',
-    lineHeight: 1.2,
-    whiteSpace: 'nowrap',
-  };
-
-  const valueStyle: React.CSSProperties = {
-    color: '#e0e0e0',
-    fontSize: 10,
-    fontFamily: 'monospace',
-    textAlign: 'center',
-    lineHeight: 1.2,
-  };
-
-  const trackAreaStyle: React.CSSProperties = {
-    position: 'relative',
-    width: totalWidth,
-    height,
-    cursor: 'ns-resize',
-    display: 'flex',
-    justifyContent: 'center',
-  };
-
-  const trackStyle: React.CSSProperties = {
-    position: 'absolute',
-    width: trackWidth,
-    height: '100%',
-    backgroundColor: '#2a2a4a',
-    borderRadius: trackWidth / 2,
-    left: '50%',
-    transform: 'translateX(-50%)',
-    boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.4)',
-  };
-
   const fillHeight = fraction * height;
-  const fillStyle: React.CSSProperties = {
-    position: 'absolute',
-    width: trackWidth,
-    height: fillHeight,
-    backgroundColor: accent.primary,
-    borderRadius: trackWidth / 2,
-    bottom: 0,
-    left: '50%',
-    transform: 'translateX(-50%)',
-  };
-
   const thumbY = (1 - fraction) * height;
-  const thumbStyle: React.CSSProperties = {
-    position: 'absolute',
-    width: thumbWidth,
-    height: thumbHeight,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 2,
-    top: thumbY - thumbHeight / 2,
-    left: '50%',
-    transform: 'translateX(-50%)',
-    boxShadow: isDragging
-      ? `0 0 6px ${accent.primary}80, 0 0 3px rgba(0,0,0,0.5)`
-      : '0 0 3px rgba(0,0,0,0.5)',
-  };
-
-  // Value tooltip shown during drag
-  const tooltipStyle: React.CSSProperties = {
-    position: 'absolute',
-    top: thumbY - thumbHeight / 2 - 16,
-    left: '50%',
-    transform: 'translateX(-50%)',
-    background: '#1a1a2e',
-    color: '#e0e0e0',
-    fontSize: 9,
-    fontFamily: 'monospace',
-    padding: '1px 4px',
-    borderRadius: 2,
-    border: `1px solid ${accent.primary}40`,
-    whiteSpace: 'nowrap',
-    pointerEvents: 'none',
-  };
 
   return (
-    <div style={containerStyle}>
-      <span style={labelStyle}>{label}</span>
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: 3,
+      userSelect: 'none',
+    }}>
+      <span style={{
+        color: theme.textSecondary,
+        fontSize: theme.fontSizeLabel,
+        fontFamily: theme.fontBase,
+        textAlign: 'center',
+        lineHeight: 1.2,
+        whiteSpace: 'nowrap',
+      }}>{label}</span>
       <div
         ref={trackRef}
-        style={trackAreaStyle}
+        style={{
+          position: 'relative',
+          width: totalWidth,
+          height,
+          cursor: 'ns-resize',
+          display: 'flex',
+          justifyContent: 'center',
+        }}
         onMouseDown={handleMouseDown}
       >
-        <div style={trackStyle} />
-        <div style={fillStyle} />
-        <div style={thumbStyle} />
+        <div style={{
+          position: 'absolute',
+          width: trackWidth,
+          height: '100%',
+          backgroundColor: theme.sliderTrack,
+          borderRadius: trackWidth / 2,
+          left: '50%',
+          transform: 'translateX(-50%)',
+        }} />
+        <div style={{
+          position: 'absolute',
+          width: trackWidth,
+          height: fillHeight,
+          backgroundColor: accent.primary,
+          borderRadius: trackWidth / 2,
+          bottom: 0,
+          left: '50%',
+          transform: 'translateX(-50%)',
+        }} />
+        <div style={{
+          position: 'absolute',
+          width: thumbWidth,
+          height: thumbHeight,
+          backgroundColor: theme.sliderThumb,
+          borderRadius: theme.borderRadius,
+          top: thumbY - thumbHeight / 2,
+          left: '50%',
+          transform: 'translateX(-50%)',
+        }} />
         {isDragging && (
-          <div style={tooltipStyle}>{formatValue(value)}</div>
+          <div style={{
+            position: 'absolute',
+            top: thumbY - thumbHeight / 2 - 16,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: theme.tooltipBg,
+            color: theme.textPrimary,
+            fontSize: 9,
+            fontFamily: theme.fontMono,
+            padding: '1px 4px',
+            borderRadius: theme.borderRadius,
+            border: `1px solid ${theme.borderSubtle}`,
+            whiteSpace: 'nowrap',
+            pointerEvents: 'none',
+          }}>{formatValue(value)}</div>
         )}
       </div>
-      <span style={valueStyle}>{formatValue(value)}</span>
+      <span style={{
+        color: theme.textPrimary,
+        fontSize: theme.fontSizeLabel,
+        fontFamily: theme.fontMono,
+        textAlign: 'center',
+        lineHeight: 1.2,
+      }}>{formatValue(value)}</span>
     </div>
   );
 };

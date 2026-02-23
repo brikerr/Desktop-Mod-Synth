@@ -61,6 +61,14 @@ export interface ThemeTokens {
   cableOpacity: number;
   cableWidth: number;
 
+  // Glass / panel
+  panelRadius: number;
+  glassBg: string;
+  glassBorder: string;
+  glassShadow: string;
+  glassHeaderBg: string;
+  glassHighlight: string;
+
   // Sizing
   borderRadius: number;
   fontBase: string;
@@ -98,12 +106,12 @@ export const darkTheme: ThemeTokens = {
   accent: '#FF764D',
   accentHover: '#FF8E6B',
 
-  signalAudio: '#CCCC44',
-  signalCv: '#44BBCC',
-  signalGate: '#44CC66',
-  signalAudioBg: '#CCCC4430',
-  signalCvBg: '#44BBCC30',
-  signalGateBg: '#44CC6630',
+  signalAudio: '#FF44CC',
+  signalCv: '#44DDFF',
+  signalGate: '#AAFF22',
+  signalAudioBg: '#FF44CC30',
+  signalCvBg: '#44DDFF30',
+  signalGateBg: '#AAFF2230',
 
   knobTrack: '#222222',
   knobRing: '#4A4A4A',
@@ -127,9 +135,16 @@ export const darkTheme: ThemeTokens = {
   tooltipBorder: '#4A4A4A',
 
   cableOpacity: 1.0,
-  cableWidth: 2,
+  cableWidth: 3,
 
-  borderRadius: 2,
+  panelRadius: 18,
+  glassBg: 'rgba(38, 38, 38, 0.65)',
+  glassBorder: 'rgba(255, 255, 255, 0.14)',
+  glassShadow: '0 6px 32px rgba(0, 0, 0, 0.4)',
+  glassHeaderBg: 'rgba(55, 55, 55, 0.6)',
+  glassHighlight: 'rgba(255, 255, 255, 0.06)',
+
+  borderRadius: 4,
   fontBase: "'Roboto Mono', 'SF Mono', 'Fira Code', monospace",
   fontMono: "'SF Mono', 'Fira Code', 'Cascadia Code', monospace",
   fontSize: 11,
@@ -163,12 +178,12 @@ export const lightTheme: ThemeTokens = {
   accent: '#FF764D',
   accentHover: '#FF8E6B',
 
-  signalAudio: '#AAAA22',
-  signalCv: '#2299AA',
-  signalGate: '#22AA44',
-  signalAudioBg: '#AAAA2230',
-  signalCvBg: '#2299AA30',
-  signalGateBg: '#22AA4430',
+  signalAudio: '#DD22AA',
+  signalCv: '#0099CC',
+  signalGate: '#77CC00',
+  signalAudioBg: '#DD22AA30',
+  signalCvBg: '#0099CC30',
+  signalGateBg: '#77CC0030',
 
   knobTrack: '#B8B8B8',
   knobRing: '#999999',
@@ -192,9 +207,16 @@ export const lightTheme: ThemeTokens = {
   tooltipBorder: '#AAAAAA',
 
   cableOpacity: 1.0,
-  cableWidth: 2,
+  cableWidth: 3,
 
-  borderRadius: 2,
+  panelRadius: 18,
+  glassBg: 'rgba(230, 230, 230, 0.55)',
+  glassBorder: 'rgba(255, 255, 255, 0.6)',
+  glassShadow: '0 6px 32px rgba(0, 0, 0, 0.12)',
+  glassHeaderBg: 'rgba(215, 215, 215, 0.55)',
+  glassHighlight: 'rgba(255, 255, 255, 0.35)',
+
+  borderRadius: 4,
   fontBase: "'Roboto Mono', 'SF Mono', 'Fira Code', monospace",
   fontMono: "'SF Mono', 'Fira Code', 'Cascadia Code', monospace",
   fontSize: 11,

@@ -27,12 +27,15 @@ const ToastContainer: React.FC = () => {
           <div
             key={toast.id}
             style={{
-              background: theme.tooltipBg,
-              border: `1px solid ${theme.tooltipBorder}`,
+              background: theme.glassBg,
+              border: `1px solid ${theme.glassBorder}`,
               borderLeft: `3px solid ${color}`,
-              borderRadius: theme.borderRadius,
-              padding: '8px 12px',
+              borderRadius: 14,
+              padding: '10px 14px',
               maxWidth: 300,
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
+              boxShadow: theme.glassShadow,
               fontFamily: theme.fontBase,
               fontSize: theme.fontSize,
               color: theme.textPrimary,

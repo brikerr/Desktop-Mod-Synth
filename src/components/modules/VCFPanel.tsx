@@ -28,7 +28,7 @@ const VCFPanel: React.FC<VCFPanelProps> = ({ moduleId }) => {
   const rowStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'row',
-    gap: 10,
+    gap: 14,
     alignItems: 'flex-start',
     flexWrap: 'wrap',
     justifyContent: 'center',

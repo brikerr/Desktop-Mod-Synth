@@ -1,5 +1,8 @@
 import React, { useCallback, useRef, useState } from 'react';
 import type { PortDefinition } from '../../types/index.ts';
+import { useSynthStore } from '../../store/synth-store.ts';
+import { useTheme } from '../../store/theme-store.ts';
+import { getSignalColor } from '../../styles/theme-tokens.ts';
 import PortTooltip from '../hints/PortTooltip.tsx';
 
 type SignalType = 'audio' | 'cv' | 'gate';
@@ -21,13 +24,6 @@ interface PortProps {
   ) => void;
 }
 
-const SIGNAL_COLORS: Record<SignalType, string> = {
-  audio: '#e94560',
-  cv: '#4ecdc4',
-  gate: '#ffe66d',
-};
-
-/** Jack/port circle for patch cable connections. */
 const Port: React.FC<PortProps> = ({
   portId,
   moduleId,
@@ -37,8 +33,18 @@ const Port: React.FC<PortProps> = ({
   portDef,
   onPortClick,
 }) => {
+  const theme = useTheme();
   const circleRef = useRef<HTMLDivElement>(null);
   const [hoverRect, setHoverRect] = useState<DOMRect | null>(null);
+
+  // Check if this port has a cable connected
+  const isConnected = useSynthStore((s) => {
+    return Object.values(s.connections).some(
+      (c) =>
+        (c.source.moduleId === moduleId && c.source.portId === portId) ||
+        (c.dest.moduleId === moduleId && c.dest.portId === portId),
+    );
+  });
 
   const handleClick = useCallback(() => {
     if (circleRef.current) {
@@ -46,39 +52,20 @@ const Port: React.FC<PortProps> = ({
     }
   }, [moduleId, portId, direction, signal, onPortClick]);
 
-  const color = SIGNAL_COLORS[signal];
-
-  const containerStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: direction === 'input' ? 'row' : 'row-reverse',
-    alignItems: 'center',
-    gap: 4,
-    userSelect: 'none',
-  };
-
-  const circleStyle: React.CSSProperties = {
-    width: 16,
-    height: 16,
-    borderRadius: '50%',
-    backgroundColor: '#1a1a2e',
-    border: `2px solid ${color}`,
-    boxShadow: `0 0 4px ${color}80, inset 0 0 3px ${color}40`,
-    cursor: 'pointer',
-    flexShrink: 0,
-    transition: 'box-shadow 0.15s ease',
-  };
-
-  const labelStyle: React.CSSProperties = {
-    color: '#a0a0b0',
-    fontSize: 9,
-    fontFamily: 'sans-serif',
-    whiteSpace: 'nowrap',
-    lineHeight: 1.2,
-  };
+  const color = getSignalColor(theme, signal);
+  // Connected fill is a brighter/lighter tint than the cable color
+  const fillColor = `${color}CC`;
+  const size = theme.portSize;
 
   return (
     <div
-      style={containerStyle}
+      style={{
+        display: 'flex',
+        flexDirection: direction === 'input' ? 'row' : 'row-reverse',
+        alignItems: 'center',
+        gap: 4,
+        userSelect: 'none',
+      }}
       onMouseEnter={() => {
         if (circleRef.current && portDef) {
           setHoverRect(circleRef.current.getBoundingClientRect());
@@ -88,19 +75,37 @@ const Port: React.FC<PortProps> = ({
     >
       <div
         ref={circleRef}
-        style={circleStyle}
+        style={{
+          width: size,
+          height: size,
+          borderRadius: '50%',
+          backgroundColor: isConnected ? fillColor : theme.bgApp,
+          border: `2px solid ${color}`,
+          cursor: 'pointer',
+          flexShrink: 0,
+          transition: 'background-color 0.15s ease, box-shadow 0.15s ease',
+          boxShadow: isConnected ? `0 0 6px ${color}40` : 'none',
+        }}
         data-port-id={`${moduleId}:${portId}`}
         onClick={handleClick}
         onMouseEnter={(e) => {
-          (e.currentTarget as HTMLDivElement).style.boxShadow =
-            `0 0 8px ${color}cc, inset 0 0 4px ${color}60`;
+          if (!isConnected) {
+            (e.currentTarget as HTMLDivElement).style.backgroundColor = `${color}30`;
+          }
         }}
         onMouseLeave={(e) => {
-          (e.currentTarget as HTMLDivElement).style.boxShadow =
-            `0 0 4px ${color}80, inset 0 0 3px ${color}40`;
+          if (!isConnected) {
+            (e.currentTarget as HTMLDivElement).style.backgroundColor = theme.bgApp;
+          }
         }}
       />
-      <span style={labelStyle}>{label}</span>
+      <span style={{
+        color: theme.textSecondary,
+        fontSize: 9,
+        fontFamily: theme.fontBase,
+        whiteSpace: 'nowrap',
+        lineHeight: 1.2,
+      }}>{label}</span>
       {hoverRect && portDef && (
         <PortTooltip anchorRect={hoverRect} port={portDef} />
       )}

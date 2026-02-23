@@ -1,25 +1,20 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSynthStore } from '../store/synth-store.ts';
+import { useTheme } from '../store/theme-store.ts';
+import { getSignalColor } from '../styles/theme-tokens.ts';
 import type { CableConnection, SignalType } from '../types/index.ts';
-
-// ---------- helpers ----------
-
-const SIGNAL_COLORS: Record<SignalType, string> = {
-  audio: '#ff4d6d',
-  cv: '#5bf5e8',
-  gate: '#ffed4a',
-};
 
 interface Point {
   x: number;
   y: number;
 }
 
-/**
- * Resolve the center position of a port element identified by
- * `data-port-id="moduleId:portId"`. The returned coordinates are relative to
- * the given `containerEl` so they line up inside the pannable/zoomable SVG.
- */
+// Spring physics constants
+const SPRING_K = 0.06;
+const SPRING_DAMP = 0.82;
+const SETTLE_THRESHOLD = 0.15;
+const IMPULSE_SCALE = 0.35;
+
 function getPortPosition(
   moduleId: string,
   portId: string,
@@ -45,31 +40,36 @@ function getPortPosition(
   };
 }
 
-/**
- * Build a cubic-bezier path with catenary sag.
- */
-function cablePath(a: Point, b: Point): string {
+function cablePath(a: Point, b: Point, bounceY: number = 0): string {
   const dx = Math.abs(b.x - a.x);
   const offset = Math.max(80, dx * 0.4);
-  // Catenary sag: cables droop downward based on distance
-  const sag = Math.min(80, dx * 0.15 + 20);
+  const sag = Math.min(80, dx * 0.15 + 20) + bounceY;
   return `M ${a.x},${a.y} C ${a.x + offset},${a.y + sag} ${b.x - offset},${b.y + sag} ${b.x},${b.y}`;
 }
-
-// ---------- individual cable ----------
 
 interface CableProps {
   connection: CableConnection;
   containerEl: HTMLElement | null;
-  tick: number; // forces re-render on RAF
+  tick: number;
 }
 
-const Cable = React.memo(function Cable({
-  connection,
-  containerEl,
-  tick: _tick,
-}: CableProps) {
+function Cable({ connection, containerEl, tick: _tick }: CableProps) {
   const removeConnection = useSynthStore((s) => s.removeConnection);
+  const theme = useTheme();
+  const pathRef = useRef<SVGPathElement>(null);
+  const texRef = useRef<SVGPathElement>(null);
+  const rafRef = useRef(0);
+
+  const springRef = useRef({
+    offset: 0,
+    vel: 0,
+    prevMidY: 0,
+    init: false,
+    active: false,
+    lastSrc: null as Point | null,
+    lastDst: null as Point | null,
+  });
+
   const src = getPortPosition(
     connection.source.moduleId,
     connection.source.portId,
@@ -81,41 +81,101 @@ const Cable = React.memo(function Cable({
     containerEl,
   );
 
+  // Store latest positions so the rAF loop can access them
+  const sp = springRef.current;
+  sp.lastSrc = src;
+  sp.lastDst = dst;
+
+  // Detect endpoint movement, apply spring impulse
+  useEffect(() => {
+    if (!src || !dst) return;
+    const midY = (src.y + dst.y) / 2;
+
+    if (!sp.init) {
+      sp.prevMidY = midY;
+      sp.init = true;
+      return;
+    }
+
+    const delta = midY - sp.prevMidY;
+    sp.prevMidY = midY;
+
+    if (Math.abs(delta) > 0.5) {
+      sp.vel -= delta * IMPULSE_SCALE;
+
+      if (!sp.active) {
+        sp.active = true;
+        const step = () => {
+          sp.vel = (sp.vel - SPRING_K * sp.offset) * SPRING_DAMP;
+          sp.offset += sp.vel;
+
+          if (sp.lastSrc && sp.lastDst) {
+            const d = cablePath(sp.lastSrc, sp.lastDst, sp.offset);
+            pathRef.current?.setAttribute('d', d);
+            texRef.current?.setAttribute('d', d);
+          }
+
+          if (Math.abs(sp.vel) > SETTLE_THRESHOLD || Math.abs(sp.offset) > SETTLE_THRESHOLD) {
+            rafRef.current = requestAnimationFrame(step);
+          } else {
+            sp.offset = 0;
+            sp.vel = 0;
+            sp.active = false;
+            if (sp.lastSrc && sp.lastDst) {
+              const d = cablePath(sp.lastSrc, sp.lastDst, 0);
+              pathRef.current?.setAttribute('d', d);
+              texRef.current?.setAttribute('d', d);
+            }
+          }
+        };
+        rafRef.current = requestAnimationFrame(step);
+      }
+    }
+  });
+
+  // Cleanup rAF on unmount
+  useEffect(() => {
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []);
+
   if (!src || !dst) return null;
 
-  const color = SIGNAL_COLORS[connection.signalType];
+  const color = getSignalColor(theme, connection.signalType);
+  const d = cablePath(src, dst, sp.offset);
 
   return (
-    <g>
-      {/* Glow layer */}
+    <g
+      style={{ cursor: 'pointer' }}
+      onClick={(e) => {
+        e.stopPropagation();
+        removeConnection(connection.id);
+      }}
+    >
+      {/* Base cable */}
       <path
-        d={cablePath(src, dst)}
+        ref={pathRef}
+        d={d}
         stroke={color}
-        strokeWidth={6}
+        strokeWidth={theme.cableWidth}
         fill="none"
-        opacity={0.15}
-        filter="url(#cable-glow)"
-        style={{ pointerEvents: 'none' }}
+        opacity={theme.cableOpacity}
+        strokeLinecap="round"
+        style={{ pointerEvents: 'stroke' }}
       />
-      {/* Main cable */}
+      {/* Texture highlight — subtle dashed lighter stripe */}
       <path
-        d={cablePath(src, dst)}
-        stroke={color}
-        strokeWidth={3}
+        ref={texRef}
+        d={d}
+        stroke="rgba(255,255,255,0.25)"
+        strokeWidth={theme.cableWidth - 0.5}
         fill="none"
-        opacity={0.85}
-        className="cable-line"
-        style={{ pointerEvents: 'stroke', cursor: 'pointer' }}
-        onClick={(e) => {
-          e.stopPropagation();
-          removeConnection(connection.id);
-        }}
+        strokeLinecap="round"
+        strokeDasharray="2 4"
+        style={{ pointerEvents: 'none' }}
       />
     </g>
   );
-});
-
-// ---------- pending cable ----------
+}
 
 interface PendingCableProps {
   containerEl: HTMLElement | null;
@@ -124,6 +184,7 @@ interface PendingCableProps {
 
 function PendingCable({ containerEl, tick: _tick }: PendingCableProps) {
   const pendingCable = useSynthStore((s) => s.pendingCable);
+  const theme = useTheme();
   const [mouse, setMouse] = useState<Point>({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -154,13 +215,13 @@ function PendingCable({ containerEl, tick: _tick }: PendingCableProps) {
   );
   if (!src) return null;
 
-  const color = SIGNAL_COLORS[pendingCable.signalType];
+  const color = getSignalColor(theme, pendingCable.signalType);
 
   return (
     <path
       d={cablePath(src, mouse)}
       stroke={color}
-      strokeWidth={3}
+      strokeWidth={theme.cableWidth}
       fill="none"
       opacity={0.5}
       strokeDasharray="8 4"
@@ -169,10 +230,7 @@ function PendingCable({ containerEl, tick: _tick }: PendingCableProps) {
   );
 }
 
-// ---------- main overlay ----------
-
 interface CablesProps {
-  /** Reference to the pannable/zoomable inner container so we can measure port positions. */
   containerRef: React.RefObject<HTMLDivElement | null>;
 }
 
@@ -180,7 +238,6 @@ export function Cables({ containerRef }: CablesProps) {
   const connections = useSynthStore((s) => s.connections);
   const modules = useSynthStore((s) => s.modules);
 
-  // Tick counter driven by RAF to re-measure port positions when modules move.
   const [tick, setTick] = useState(0);
   const rafRef = useRef(0);
   const prevModulesRef = useRef(modules);
@@ -225,15 +282,6 @@ export function Cables({ containerRef }: CablesProps) {
         overflow: 'visible',
       }}
     >
-      <defs>
-        <filter id="cable-glow" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
       {connectionList.map((conn) => (
         <Cable
           key={conn.id}

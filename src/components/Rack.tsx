@@ -181,6 +181,13 @@ export function Rack() {
         gap: 4,
         alignItems: 'center',
         zIndex: 100,
+        background: theme.glassBg,
+        border: `1px solid ${theme.glassBorder}`,
+        borderRadius: 14,
+        padding: 4,
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
+        boxShadow: theme.glassShadow,
       }}>
         <button
           onClick={zoomIn}
@@ -191,15 +198,16 @@ export function Rack() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: theme.bgPanel,
-            border: `1px solid ${theme.borderSubtle}`,
-            borderRadius: theme.borderRadius,
+            background: 'transparent',
+            border: 'none',
+            borderRadius: 10,
             color: theme.textPrimary,
             cursor: 'pointer',
           }}
         >
           <span className="material-symbols-outlined" style={{ fontSize: 20 }}>add</span>
         </button>
+        <div style={{ width: 20, height: 1, background: theme.glassBorder }} />
         <button
           onClick={zoomReset}
           title="Reset view"
@@ -209,9 +217,9 @@ export function Rack() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: theme.bgPanel,
-            border: `1px solid ${theme.borderSubtle}`,
-            borderRadius: theme.borderRadius,
+            background: 'transparent',
+            border: 'none',
+            borderRadius: 10,
             color: theme.textSecondary,
             cursor: 'pointer',
             fontFamily: theme.fontBase,
@@ -221,6 +229,7 @@ export function Rack() {
         >
           {Math.round(zoom * 100)}%
         </button>
+        <div style={{ width: 20, height: 1, background: theme.glassBorder }} />
         <button
           onClick={zoomOut}
           title="Zoom out"
@@ -230,9 +239,9 @@ export function Rack() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: theme.bgPanel,
-            border: `1px solid ${theme.borderSubtle}`,
-            borderRadius: theme.borderRadius,
+            background: 'transparent',
+            border: 'none',
+            borderRadius: 10,
             color: theme.textPrimary,
             cursor: 'pointer',
           }}

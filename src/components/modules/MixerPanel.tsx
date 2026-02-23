@@ -22,7 +22,7 @@ const MixerPanel: React.FC<MixerPanelProps> = ({ moduleId }) => {
   const rowStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'row',
-    gap: 10,
+    gap: 14,
     alignItems: 'flex-end',
     justifyContent: 'center',
   };

@@ -6,7 +6,6 @@ import { useTheme } from '../store/theme-store.ts';
 import { ModuleAccentContext } from './controls/ModuleAccentContext.tsx';
 import Port from './controls/Port.tsx';
 import Tooltip from './hints/Tooltip.tsx';
-import PatchSuggestion from './hints/PatchSuggestion.tsx';
 import type { PortDefinition } from '../types/index.ts';
 
 interface ModulePanelProps {
@@ -94,24 +93,28 @@ const ModulePanel: React.FC<ModulePanelProps> = ({ moduleId, children }) => {
   return (
     <ModuleAccentContext.Provider value={colors}>
       <div style={{
-        minWidth: 200,
-        background: theme.bgPanel,
-        borderRadius: theme.borderRadius,
-        border: `1px solid ${isDragging ? colors.primary : theme.borderSubtle}`,
-        boxShadow: isDragging ? `0 0 12px ${colors.primary}40` : 'none',
+        minWidth: 220,
+        background: theme.glassBg,
+        borderRadius: theme.panelRadius,
+        border: `1px solid ${isDragging ? colors.primary : theme.glassBorder}`,
+        boxShadow: isDragging
+          ? `${theme.glassShadow}, 0 0 16px ${colors.primary}30`
+          : theme.glassShadow,
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
         transition: 'border-color 0.15s, box-shadow 0.15s',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
       }}>
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            background: theme.bgPanelHeader,
-            borderBottom: `3px solid ${colors.primary}`,
-            padding: '4px 8px',
+            background: theme.glassHeaderBg,
+            borderBottom: `1px solid ${theme.glassBorder}`,
+            padding: '8px 14px',
             cursor: 'grab',
             userSelect: 'none',
           }}
@@ -166,31 +169,29 @@ const ModulePanel: React.FC<ModulePanelProps> = ({ moduleId, children }) => {
         <div style={{
           display: 'flex',
           flexDirection: 'row',
-          padding: 6,
-          gap: 6,
+          padding: '12px 14px',
+          gap: 12,
           alignItems: 'flex-start',
         }}>
           {inputPorts.length > 0 && (
             <div style={{
               display: 'flex',
               flexDirection: 'column',
-              gap: 4,
+              gap: 6,
               alignItems: 'flex-start',
               minWidth: 40,
             }}>
               {inputPorts.map((port) => (
-                <div key={port.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1 }}>
-                  <Port
-                    portId={port.id}
-                    moduleId={moduleId}
-                    label={port.name}
-                    direction={port.direction}
-                    signal={port.signal}
-                    portDef={port}
-                    onPortClick={handlePortClick}
-                  />
-                  <PatchSuggestion moduleId={moduleId} portId={port.id} direction={port.direction} />
-                </div>
+                <Port
+                  key={port.id}
+                  portId={port.id}
+                  moduleId={moduleId}
+                  label={port.name}
+                  direction={port.direction}
+                  signal={port.signal}
+                  portDef={port}
+                  onPortClick={handlePortClick}
+                />
               ))}
             </div>
           )}
@@ -200,30 +201,28 @@ const ModulePanel: React.FC<ModulePanelProps> = ({ moduleId, children }) => {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: 6,
+            gap: 10,
           }}>{children}</div>
 
           {outputPorts.length > 0 && (
             <div style={{
               display: 'flex',
               flexDirection: 'column',
-              gap: 4,
+              gap: 6,
               alignItems: 'flex-end',
               minWidth: 40,
             }}>
               {outputPorts.map((port) => (
-                <div key={port.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
-                  <Port
-                    portId={port.id}
-                    moduleId={moduleId}
-                    label={port.name}
-                    direction={port.direction}
-                    signal={port.signal}
-                    portDef={port}
-                    onPortClick={handlePortClick}
-                  />
-                  <PatchSuggestion moduleId={moduleId} portId={port.id} direction={port.direction} />
-                </div>
+                <Port
+                  key={port.id}
+                  portId={port.id}
+                  moduleId={moduleId}
+                  label={port.name}
+                  direction={port.direction}
+                  signal={port.signal}
+                  portDef={port}
+                  onPortClick={handlePortClick}
+                />
               ))}
             </div>
           )}

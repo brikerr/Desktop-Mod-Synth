@@ -1,5 +1,6 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { useAccentColor } from './ModuleAccentContext.tsx';
+import { useTheme } from '../../store/theme-store.ts';
 
 interface KnobProps {
   label: string;
@@ -18,7 +19,6 @@ function formatValue(value: number): string {
   return value.toFixed(2);
 }
 
-/** Rotary knob with arc indicator and vertical-drag interaction. */
 const Knob: React.FC<KnobProps> = ({
   label,
   value,
@@ -26,9 +26,11 @@ const Knob: React.FC<KnobProps> = ({
   max,
   step,
   onChange,
-  size = 48,
+  size,
 }) => {
   const accent = useAccentColor();
+  const theme = useTheme();
+  const resolvedSize = size ?? theme.knobSize;
   const [isDragging, setIsDragging] = useState(false);
   const dragStateRef = useRef<{
     startY: number;
@@ -52,7 +54,7 @@ const Knob: React.FC<KnobProps> = ({
       if (!dragStateRef.current) return;
       const dy = dragStateRef.current.startY - e.clientY;
       const range = max - min;
-      const sensitivity = 200; // 200px drag = full range
+      const sensitivity = 200;
       const delta = (dy / sensitivity) * range;
       const newValue = clamp(dragStateRef.current.startValue + delta);
       onChange(newValue);
@@ -86,8 +88,8 @@ const Knob: React.FC<KnobProps> = ({
   );
 
   // --- Arc geometry ---
-  const startAngleDeg = 225; // 7-o'clock position
-  const endAngleDeg = -45; // 5-o'clock position
+  const startAngleDeg = 225;
+  const endAngleDeg = -45;
   const totalSweepDeg = 270;
 
   const fraction = max !== min ? (value - min) / (max - min) : 0;
@@ -95,19 +97,18 @@ const Knob: React.FC<KnobProps> = ({
 
   const toRad = (deg: number) => (deg * Math.PI) / 180;
 
-  const cx = size / 2;
-  const cy = size / 2;
-  const radius = size / 2 - 4;
-  const arcRadius = radius - 3;
-  const indicatorInner = radius - 10;
-  const indicatorOuter = radius - 2;
+  const cx = resolvedSize / 2;
+  const cy = resolvedSize / 2;
+  const radius = resolvedSize / 2 - 3;
+  const arcRadius = radius - 2;
+  const indicatorInner = radius - 8;
+  const indicatorOuter = radius - 1;
 
   const angleToXY = (deg: number, r: number) => ({
     x: cx + r * Math.cos(toRad(deg)),
     y: cy - r * Math.sin(toRad(deg)),
   });
 
-  // Filled arc path
   const arcStart = angleToXY(startAngleDeg, arcRadius);
   const arcEnd = angleToXY(currentAngleDeg, arcRadius);
   const sweepDeg = startAngleDeg - currentAngleDeg;
@@ -117,65 +118,40 @@ const Knob: React.FC<KnobProps> = ({
       ? `M ${arcStart.x} ${arcStart.y} A ${arcRadius} ${arcRadius} 0 ${largeArc} 1 ${arcEnd.x} ${arcEnd.y}`
       : '';
 
-  // Indicator line
   const indInner = angleToXY(currentAngleDeg, indicatorInner);
   const indOuter = angleToXY(currentAngleDeg, indicatorOuter);
 
-  // Tick marks (11 ticks across 270 degrees)
   const tickCount = 11;
   const tickInner = radius - 1;
   const tickOuter = radius + 1;
 
-  // --- Styles ---
-  const containerStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 2,
-    userSelect: 'none',
-  };
-
-  const labelStyle: React.CSSProperties = {
-    color: '#a0a0b0',
-    fontSize: 10,
-    fontFamily: 'sans-serif',
-    textAlign: 'center',
-    lineHeight: 1.2,
-    whiteSpace: 'nowrap',
-  };
-
-  const valueStyle: React.CSSProperties = {
-    color: '#e0e0e0',
-    fontSize: 10,
-    fontFamily: 'monospace',
-    textAlign: 'center',
-    lineHeight: 1.2,
-  };
-
-  const svgFilter = isDragging ? `drop-shadow(0 0 4px ${accent.primary}80)` : 'none';
-
   return (
-    <div style={containerStyle}>
-      <span style={labelStyle}>{label}</span>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 3,
+        userSelect: 'none',
+      }}
+    >
+      <span style={{
+        color: theme.textSecondary,
+        fontSize: theme.fontSizeLabel,
+        fontFamily: theme.fontBase,
+        textAlign: 'center',
+        lineHeight: 1.2,
+        whiteSpace: 'nowrap',
+      }}>{label}</span>
       <svg
-        width={size}
-        height={size}
+        width={resolvedSize}
+        height={resolvedSize}
         onMouseDown={handleMouseDown}
-        style={{ cursor: 'ns-resize', filter: svgFilter }}
+        style={{ cursor: 'ns-resize' }}
       >
-        {/* Knob body with radial gradient */}
-        <defs>
-          <radialGradient id={`knob-grad-${label}`} cx="40%" cy="35%">
-            <stop offset="0%" stopColor="#3a3a5a" />
-            <stop offset="100%" stopColor="#1a1a2e" />
-          </radialGradient>
-        </defs>
-        <circle cx={cx} cy={cy} r={radius} fill={`url(#knob-grad-${label})`} />
+        <circle cx={cx} cy={cy} r={radius} fill={theme.bgControl} />
+        <circle cx={cx} cy={cy} r={radius} fill="none" stroke={theme.knobRing} strokeWidth={1} />
 
-        {/* Metallic ring */}
-        <circle cx={cx} cy={cy} r={radius} fill="none" stroke="#4a4a6a" strokeWidth={1} />
-
-        {/* Tick marks */}
         {Array.from({ length: tickCount }, (_, ti) => {
           const tickFrac = ti / (tickCount - 1);
           const tickAngle = startAngleDeg - tickFrac * totalSweepDeg;
@@ -184,18 +160,14 @@ const Knob: React.FC<KnobProps> = ({
           return (
             <line
               key={ti}
-              x1={p1.x}
-              y1={p1.y}
-              x2={p2.x}
-              y2={p2.y}
-              stroke="#3a3a5a"
+              x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
+              stroke={theme.knobTick}
               strokeWidth={1}
               strokeLinecap="round"
             />
           );
         })}
 
-        {/* Background track */}
         {(() => {
           const trackStart = angleToXY(startAngleDeg, arcRadius);
           const trackEnd = angleToXY(endAngleDeg, arcRadius);
@@ -203,36 +175,38 @@ const Knob: React.FC<KnobProps> = ({
             <path
               d={`M ${trackStart.x} ${trackStart.y} A ${arcRadius} ${arcRadius} 0 1 1 ${trackEnd.x} ${trackEnd.y}`}
               fill="none"
-              stroke="#1a1a2e"
-              strokeWidth={2.5}
+              stroke={theme.knobTrack}
+              strokeWidth={2}
               strokeLinecap="round"
             />
           );
         })()}
 
-        {/* Filled arc (uses accent color) */}
         {arcPath && (
           <path
             d={arcPath}
             fill="none"
             stroke={accent.primary}
-            strokeWidth={2.5}
+            strokeWidth={2}
             strokeLinecap="round"
           />
         )}
 
-        {/* Indicator line */}
         <line
-          x1={indInner.x}
-          y1={indInner.y}
-          x2={indOuter.x}
-          y2={indOuter.y}
-          stroke={accent.primary}
+          x1={indInner.x} y1={indInner.y}
+          x2={indOuter.x} y2={indOuter.y}
+          stroke={isDragging ? accent.primary : theme.textPrimary}
           strokeWidth={2}
           strokeLinecap="round"
         />
       </svg>
-      <span style={valueStyle}>{formatValue(value)}</span>
+      <span style={{
+        color: theme.textPrimary,
+        fontSize: theme.fontSizeLabel,
+        fontFamily: theme.fontMono,
+        textAlign: 'center',
+        lineHeight: 1.2,
+      }}>{formatValue(value)}</span>
     </div>
   );
 };

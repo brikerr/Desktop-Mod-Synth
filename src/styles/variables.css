@@ -1,42 +1,27 @@
+/* Theme CSS variables — only for body/html, scrollbars, and native elements.
+   All component-level theming is done via TypeScript tokens + useTheme(). */
+
+[data-theme="dark"] {
+  --bg-app: #191919;
+  --text-primary: #CCCCCC;
+  --text-secondary: #999999;
+  --scrollbar-track: #222222;
+  --scrollbar-thumb: #4A4A4A;
+  --select-option-bg: #333333;
+  --select-option-text: #CCCCCC;
+}
+
+[data-theme="light"] {
+  --bg-app: #DCDCDC;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --scrollbar-track: #C4C4C4;
+  --scrollbar-thumb: #999999;
+  --select-option-bg: #C4C4C4;
+  --select-option-text: #333333;
+}
+
 :root {
-  /* Colors */
-  --bg-primary: #1a1a2e;
-  --bg-secondary: #16213e;
-  --bg-panel: #0f3460;
-  --bg-panel-header: #533483;
-  --text-primary: #e0e0e0;
-  --text-secondary: #a0a0b0;
-  --accent: #e94560;
-  --accent-hover: #ff6b81;
-
-  /* Port colors by signal type */
-  --port-audio: #e94560;
-  --port-cv: #4ecdc4;
-  --port-gate: #ffe66d;
-
-  /* Cable colors (brighter for glow) */
-  --cable-audio: #ff4d6d;
-  --cable-cv: #5bf5e8;
-  --cable-gate: #ffed4a;
-
-  /* Controls */
-  --knob-bg: #2a2a4a;
-  --knob-indicator: #e94560;
-  --slider-track: #2a2a4a;
-  --slider-fill: #4ecdc4;
-
-  /* Spacing */
   --toolbar-height: 48px;
   --keyboard-height: 120px;
-  --module-port-size: 16px;
-  --module-min-width: 200px;
-  --module-header-height: 32px;
-
-  /* Borders */
-  --border-radius: 6px;
-  --border-color: #333366;
-
-  /* Fonts */
-  --font-ui: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
 }

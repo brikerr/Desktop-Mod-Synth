@@ -4,6 +4,7 @@ import { useToastStore } from '../store/toast-store.ts';
 import { useTheme, useThemeStore } from '../store/theme-store.ts';
 import { getModuleDefinition } from '../audio/graph/port-registry.ts';
 import { hasShownTip, markTipShown } from '../hooks/useFirstAddTracker.ts';
+import { moduleColors } from '../styles/module-colors.ts';
 import type { ModuleType } from '../types/index.ts';
 import { midiManager } from '../audio/midi-manager.ts';
 
@@ -63,6 +64,10 @@ export function Toolbar() {
   const themeName = useThemeStore((s) => s.themeName);
   const toggleTheme = useThemeStore((s) => s.toggleTheme);
 
+  const [openGroup, setOpenGroup] = React.useState<string | null>(null);
+  const [hoveredKey, setHoveredKey] = React.useState<string | null>(null);
+  const toolbarRef = React.useRef<HTMLDivElement>(null);
+
   // MIDI connection state
   const [midiConnected, setMidiConnected] = React.useState(midiManager.connected);
   const [midiDeviceName, setMidiDeviceName] = React.useState(midiManager.deviceName);
@@ -74,6 +79,18 @@ export function Toolbar() {
     });
     return unsub;
   }, []);
+
+  // Close dropdown on outside click
+  React.useEffect(() => {
+    if (!openGroup) return;
+    const handlePointerDown = (e: PointerEvent) => {
+      if (toolbarRef.current && !toolbarRef.current.contains(e.target as Node)) {
+        setOpenGroup(null);
+      }
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [openGroup]);
 
   const handlePowerToggle = React.useCallback(async () => {
     if (isAudioReady) {
@@ -91,6 +108,7 @@ export function Toolbar() {
 
   const handleAddModule = React.useCallback((type: ModuleType) => {
     addModule(type);
+    setOpenGroup(null);
     if (!hasShownTip(type)) {
       const def = getModuleDefinition(type);
       if (def.firstAddTip) {
@@ -100,43 +118,77 @@ export function Toolbar() {
     }
   }, [addModule, addToast]);
 
-  const [hoveredKey, setHoveredKey] = React.useState<string | null>(null);
+  const handleToggleGroup = React.useCallback((label: string) => {
+    setOpenGroup((prev) => (prev === label ? null : label));
+  }, []);
 
-  const buttonBase: React.CSSProperties = {
+  const categoryBtnStyle = (label: string): React.CSSProperties => {
+    const isOpen = openGroup === label;
+    const isHovered = hoveredKey === `group-${label}`;
+    const disabled = !isAudioReady;
+    return {
+      background: disabled
+        ? `${theme.bgControl}66`
+        : isOpen
+          ? theme.borderControl
+          : isHovered
+            ? `${theme.borderControl}88`
+            : theme.bgControl,
+      color: disabled ? theme.textMuted : theme.textPrimary,
+      border: `1px solid ${isOpen ? theme.textMuted : theme.borderSubtle}`,
+      padding: '6px 12px',
+      borderRadius: 10,
+      cursor: disabled ? 'not-allowed' : 'pointer',
+      fontSize: 12,
+      fontFamily: theme.fontBase,
+      whiteSpace: 'nowrap',
+      transition: 'all 0.15s ease',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 4,
+      opacity: disabled ? 0.3 : 1,
+    };
+  };
+
+  const iconBtnStyle: React.CSSProperties = {
     background: theme.bgControl,
     color: theme.textPrimary,
     border: `1px solid ${theme.borderSubtle}`,
-    padding: '6px 14px',
-    borderRadius: theme.borderRadius,
+    padding: '4px 8px',
+    borderRadius: 10,
     cursor: 'pointer',
     fontSize: 12,
     fontFamily: theme.fontBase,
     whiteSpace: 'nowrap',
-    transition: 'background 0.1s',
-  };
-
-  const buttonDisabled: React.CSSProperties = {
-    ...buttonBase,
-    opacity: 0.3,
-    cursor: 'not-allowed',
+    transition: 'all 0.15s ease',
+    lineHeight: 1,
+    display: 'flex',
+    alignItems: 'center',
   };
 
   return (
-    <div style={{
-      height: 56,
-      background: theme.bgToolbar,
-      display: 'flex',
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 10,
-      padding: '0 20px',
-      flexShrink: 0,
-      borderBottom: `1px solid ${theme.borderSubtle}`,
-    }}>
+    <div
+      ref={toolbarRef}
+      style={{
+        height: 56,
+        background: theme.bgToolbar,
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        padding: '0 20px',
+        flexShrink: 0,
+        borderBottom: `1px solid ${theme.borderSubtle}`,
+        position: 'relative',
+      }}
+    >
+      {/* Power button */}
       <button
         style={{
           width: 36,
           height: 36,
+          minWidth: 36,
+          flexShrink: 0,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -154,50 +206,91 @@ export function Toolbar() {
         <span className="material-symbols-outlined" style={{ fontSize: 22 }}>power_settings_new</span>
       </button>
 
-      <div style={{ width: 1, height: 28, background: theme.borderSubtle, marginLeft: 4, marginRight: 4 }} />
+      <div style={{ width: 1, height: 28, background: theme.borderSubtle, marginLeft: 4, marginRight: 4, flexShrink: 0 }} />
 
-      {MODULE_GROUPS.map((group, gi) => (
-        <React.Fragment key={group.label}>
-          {gi > 0 && (
-            <div style={{ width: 1, height: 28, background: theme.borderSubtle, marginLeft: 4, marginRight: 4 }} />
-          )}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-            <span style={{
-              fontSize: 9,
-              color: theme.textMuted,
-              textTransform: 'uppercase',
-              letterSpacing: 1.2,
-              lineHeight: 1,
-              fontFamily: theme.fontBase,
-            }}>{group.label}</span>
-            <div style={{ display: 'flex', flexDirection: 'row', gap: 5 }}>
+      {/* Category dropdown buttons */}
+      {MODULE_GROUPS.map((group) => (
+        <div key={group.label} style={{ position: 'relative' }}>
+          <button
+            disabled={!isAudioReady}
+            style={categoryBtnStyle(group.label)}
+            onMouseEnter={() => setHoveredKey(`group-${group.label}`)}
+            onMouseLeave={() => setHoveredKey(null)}
+            onClick={() => isAudioReady && handleToggleGroup(group.label)}
+          >
+            {group.label}
+            <span
+              className="material-symbols-outlined"
+              style={{
+                fontSize: 16,
+                transition: 'transform 0.2s ease',
+                transform: openGroup === group.label ? 'rotate(180deg)' : 'rotate(0deg)',
+              }}
+            >
+              expand_more
+            </span>
+          </button>
+
+          {/* Dropdown menu */}
+          {openGroup === group.label && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 'calc(100% + 6px)',
+                left: 0,
+                background: theme.glassBg,
+                border: `1px solid ${theme.glassBorder}`,
+                borderRadius: theme.panelRadius,
+                boxShadow: theme.glassShadow,
+                padding: '6px',
+                zIndex: 1000,
+                minWidth: 150,
+                backdropFilter: 'blur(24px)',
+                WebkitBackdropFilter: 'blur(24px)',
+              }}
+            >
               {group.modules.map((m) => {
-                const disabled = !isAudioReady;
-                const isHovered = hoveredKey === m.type && !disabled;
-
+                const isItemHovered = hoveredKey === m.type;
+                const color = moduleColors[m.type];
                 return (
                   <button
                     key={m.type}
-                    disabled={disabled}
                     style={{
-                      ...(disabled ? buttonDisabled : buttonBase),
-                      background: disabled
-                        ? `${theme.bgControl}66`
-                        : isHovered
-                          ? theme.borderControl
-                          : theme.bgControl,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      width: '100%',
+                      padding: '8px 12px',
+                      background: isItemHovered ? `${theme.borderControl}66` : 'transparent',
+                      border: 'none',
+                      borderRadius: 8,
+                      cursor: 'pointer',
+                      color: theme.textPrimary,
+                      fontSize: 12,
+                      fontFamily: theme.fontBase,
+                      transition: 'background 0.1s ease',
+                      textAlign: 'left',
                     }}
                     onMouseEnter={() => setHoveredKey(m.type)}
                     onMouseLeave={() => setHoveredKey(null)}
                     onClick={() => handleAddModule(m.type)}
                   >
+                    <span
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        background: color.primary,
+                        flexShrink: 0,
+                      }}
+                    />
                     {m.label}
                   </button>
                 );
               })}
             </div>
-          </div>
-        </React.Fragment>
+          )}
+        </div>
       ))}
 
       {/* Spacer */}
@@ -206,11 +299,7 @@ export function Toolbar() {
       {/* MIDI indicator */}
       <button
         style={{
-          ...buttonBase,
-          padding: '4px 8px',
-          lineHeight: 1,
-          display: 'flex',
-          alignItems: 'center',
+          ...iconBtnStyle,
           gap: 4,
           color: midiConnected ? theme.audioReady : theme.textMuted,
           borderColor: midiConnected ? theme.audioReady : theme.borderSubtle,
@@ -225,13 +314,7 @@ export function Toolbar() {
 
       {/* Theme toggle */}
       <button
-        style={{
-          ...buttonBase,
-          padding: '4px 8px',
-          lineHeight: 1,
-          display: 'flex',
-          alignItems: 'center',
-        }}
+        style={iconBtnStyle}
         onClick={toggleTheme}
         title={`Switch to ${themeName === 'dark' ? 'light' : 'dark'} mode`}
       >

@@ -222,6 +222,109 @@ const moduleDefinitions: Record<ModuleType, ModuleDefinition> = {
       { id: 'signal_out', name: 'Signal Out', direction: 'output', signal: 'audio', index: 0, description: 'Pass-through output — signal is unchanged', suggestedTargets: ['VCF', 'VCA', 'Output'] },
     ],
   },
+  sampleHold: {
+    type: 'sampleHold',
+    label: 'S&H',
+    description: 'Sample & Hold — snapshots a signal on trigger',
+    detailedDescription:
+      'Captures the value of an input signal whenever a trigger fires, and holds that value until the next trigger. Classic use: Noise → S&H (triggered by LFO) → VCO pitch for random melodies.',
+    firstAddTip: 'S&H grabs a snapshot of a signal each time it\'s triggered. Try Noise → Signal In, LFO (square) → Trigger, Output → VCO pitch!',
+    defaultParams: {
+      threshold: 0.5,
+    },
+    ports: [
+      { id: 'signal_in', name: 'Signal In', direction: 'input', signal: 'audio', index: 0, description: 'Signal to sample when triggered', suggestedSources: ['Noise', 'LFO', 'VCO'] },
+      { id: 'trigger_in', name: 'Trigger In', direction: 'input', signal: 'gate', index: 1, description: 'Trigger source — samples on rising edge', suggestedSources: ['LFO', 'Keyboard'] },
+      { id: 'cv_out', name: 'CV Out', direction: 'output', signal: 'cv', index: 0, description: 'Held CV value output', suggestedTargets: ['VCO', 'VCF', 'VCA'] },
+    ],
+  },
+  ringMod: {
+    type: 'ringMod',
+    label: 'Ring Mod',
+    description: 'Ring modulator — multiplies two signals for metallic tones',
+    detailedDescription:
+      'Multiplies two audio signals together, producing sum-and-difference frequencies. Creates metallic, bell-like, or robotic tones. Mix blends between dry carrier and ring-modulated output.',
+    firstAddTip: 'Ring Mod multiplies two signals for metallic tones. Connect two VCOs — one as carrier, one as modulator!',
+    defaultParams: {
+      mix: 1.0,
+    },
+    ports: [
+      { id: 'carrier_in', name: 'Carrier In', direction: 'input', signal: 'audio', index: 0, description: 'Carrier signal (main audio)', suggestedSources: ['VCO', 'Noise'] },
+      { id: 'modulator_in', name: 'Mod In', direction: 'input', signal: 'audio', index: 1, description: 'Modulator signal (multiplied with carrier)', suggestedSources: ['VCO', 'LFO'] },
+      { id: 'audio_out', name: 'Audio Out', direction: 'output', signal: 'audio', index: 0, description: 'Ring-modulated audio output', suggestedTargets: ['VCF', 'VCA', 'Mixer'] },
+    ],
+  },
+  quantizer: {
+    type: 'quantizer',
+    label: 'Quantizer',
+    description: 'Snaps CV to musical scale notes',
+    detailedDescription:
+      'Snaps a continuous CV signal to the nearest note in a selected musical scale. Turns random or gliding voltages into melodic patterns. Choose from chromatic, major, minor, pentatonic, or blues scales.',
+    firstAddTip: 'Quantizer snaps CV to scale notes. Try LFO (saw, slow) → Quantizer → VCO for stepped melodies!',
+    defaultParams: {
+      scale: 0,
+      rootNote: 0,
+    },
+    ports: [
+      { id: 'cv_in', name: 'CV In', direction: 'input', signal: 'cv', index: 0, description: 'Continuous CV input to quantize', suggestedSources: ['LFO', 'S&H', 'Envelope'] },
+      { id: 'cv_out', name: 'CV Out', direction: 'output', signal: 'cv', index: 0, description: 'Quantized CV snapped to scale', suggestedTargets: ['VCO', 'VCF'] },
+    ],
+  },
+  wavefolder: {
+    type: 'wavefolder',
+    label: 'Wavefolder',
+    description: 'Folds and distorts audio for harmonic richness',
+    detailedDescription:
+      'Folds or clips audio waveforms to add harmonics and grit. At mild settings adds warmth; at extreme settings creates complex harmonic content. Drive controls input gain, folds sets the number of folding stages.',
+    firstAddTip: 'Wavefolder adds harmonics by folding waveforms. Connect a VCO and turn up Drive to hear the effect!',
+    defaultParams: {
+      drive: 1,
+      folds: 1,
+      mix: 1.0,
+      symmetry: 0.5,
+      foldModDepth: 0,
+    },
+    ports: [
+      { id: 'audio_in', name: 'Audio In', direction: 'input', signal: 'audio', index: 0, description: 'Audio signal to fold/distort', suggestedSources: ['VCO', 'Noise', 'Mixer'] },
+      { id: 'fold_cv', name: 'Fold CV', direction: 'input', signal: 'cv', index: 1, description: 'Modulate fold amount via CV', suggestedSources: ['LFO', 'Envelope'] },
+      { id: 'audio_out', name: 'Audio Out', direction: 'output', signal: 'audio', index: 0, description: 'Folded/distorted audio output', suggestedTargets: ['VCF', 'VCA', 'Mixer'] },
+    ],
+  },
+  spectrum: {
+    type: 'spectrum',
+    label: 'Spectrum',
+    description: 'Frequency spectrum display — see your sound\'s harmonics',
+    detailedDescription:
+      'Displays the frequency spectrum of a signal (frequency domain view), complementing the time-domain oscilloscope. Shows which frequencies are present and their relative levels.',
+    firstAddTip: 'Spectrum shows frequency content. Patch any audio through it to see the harmonics!',
+    defaultParams: {
+      freeze: 0,
+    },
+    ports: [
+      { id: 'signal_in', name: 'Signal In', direction: 'input', signal: 'audio', index: 0, description: 'Signal to analyze', suggestedSources: ['VCO', 'VCF', 'Mixer'] },
+      { id: 'signal_out', name: 'Signal Out', direction: 'output', signal: 'audio', index: 0, description: 'Pass-through output — signal is unchanged', suggestedTargets: ['VCF', 'VCA', 'Output'] },
+    ],
+  },
+  stepSequencer: {
+    type: 'stepSequencer',
+    label: 'Sequencer',
+    description: '8-step sequencer — creates repeating melodic patterns',
+    detailedDescription:
+      'An 8-step pattern that outputs pitch CV and gate signals in sequence, triggered by a clock input. Creates repeating melodic patterns. Each step has an adjustable CV value.',
+    firstAddTip: 'Sequencer creates patterns! Connect LFO (square) → Clock, then CV Out → VCO and Gate Out → Envelope!',
+    defaultParams: {
+      step0: 0, step1: 0, step2: 0, step3: 0,
+      step4: 0, step5: 0, step6: 0, step7: 0,
+      gateLength: 0.5,
+      steps: 8,
+    },
+    ports: [
+      { id: 'clock_in', name: 'Clock In', direction: 'input', signal: 'gate', index: 0, description: 'Clock trigger — advances to next step', suggestedSources: ['LFO'] },
+      { id: 'reset_in', name: 'Reset In', direction: 'input', signal: 'gate', index: 1, description: 'Reset to step 1', suggestedSources: ['LFO', 'Keyboard'] },
+      { id: 'cv_out', name: 'CV Out', direction: 'output', signal: 'cv', index: 0, description: 'Step pitch CV output', suggestedTargets: ['VCO', 'VCF', 'Quantizer'] },
+      { id: 'gate_out', name: 'Gate Out', direction: 'output', signal: 'gate', index: 1, description: 'Step gate output', suggestedTargets: ['Envelope', 'VCA'] },
+    ],
+  },
 };
 
 export function getModuleDefinition(type: ModuleType): ModuleDefinition {

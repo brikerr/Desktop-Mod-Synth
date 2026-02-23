@@ -5,6 +5,7 @@ import { useTheme, useThemeStore } from '../store/theme-store.ts';
 import { getModuleDefinition } from '../audio/graph/port-registry.ts';
 import { hasShownTip, markTipShown } from '../hooks/useFirstAddTracker.ts';
 import type { ModuleType } from '../types/index.ts';
+import { midiManager } from '../audio/midi-manager.ts';
 
 interface ModuleGroup {
   label: string;
@@ -19,6 +20,7 @@ const MODULE_GROUPS: ModuleGroup[] = [
       { type: 'noise', label: 'Noise' },
       { type: 'lfo', label: 'LFO' },
       { type: 'keyboard', label: 'Keyboard' },
+      { type: 'stepSequencer', label: 'Sequencer' },
     ],
   },
   {
@@ -28,6 +30,8 @@ const MODULE_GROUPS: ModuleGroup[] = [
       { type: 'vca', label: 'VCA' },
       { type: 'mixer', label: 'Mixer' },
       { type: 'envelope', label: 'Envelope' },
+      { type: 'quantizer', label: 'Quantizer' },
+      { type: 'sampleHold', label: 'S&H' },
     ],
   },
   {
@@ -35,12 +39,15 @@ const MODULE_GROUPS: ModuleGroup[] = [
     modules: [
       { type: 'delay', label: 'Delay' },
       { type: 'reverb', label: 'Reverb' },
+      { type: 'ringMod', label: 'Ring Mod' },
+      { type: 'wavefolder', label: 'Wavefolder' },
     ],
   },
   {
     label: 'Utility',
     modules: [
       { type: 'oscilloscope', label: 'Scope' },
+      { type: 'spectrum', label: 'Spectrum' },
       { type: 'output', label: 'Output' },
     ],
   },
@@ -55,6 +62,18 @@ export function Toolbar() {
   const theme = useTheme();
   const themeName = useThemeStore((s) => s.themeName);
   const toggleTheme = useThemeStore((s) => s.toggleTheme);
+
+  // MIDI connection state
+  const [midiConnected, setMidiConnected] = React.useState(midiManager.connected);
+  const [midiDeviceName, setMidiDeviceName] = React.useState(midiManager.deviceName);
+
+  React.useEffect(() => {
+    const unsub = midiManager.subscribe(() => {
+      setMidiConnected(midiManager.connected);
+      setMidiDeviceName(midiManager.deviceName);
+    });
+    return unsub;
+  }, []);
 
   const handlePowerToggle = React.useCallback(async () => {
     if (isAudioReady) {
@@ -183,6 +202,26 @@ export function Toolbar() {
 
       {/* Spacer */}
       <div style={{ flex: 1 }} />
+
+      {/* MIDI indicator */}
+      <button
+        style={{
+          ...buttonBase,
+          padding: '4px 8px',
+          lineHeight: 1,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 4,
+          color: midiConnected ? theme.audioReady : theme.textMuted,
+          borderColor: midiConnected ? theme.audioReady : theme.borderSubtle,
+        }}
+        title={midiConnected ? `MIDI: ${midiDeviceName}` : 'No MIDI device connected'}
+      >
+        <span className="material-symbols-outlined" style={{ fontSize: 18 }}>piano</span>
+        {midiConnected && (
+          <span style={{ fontSize: 9, fontFamily: theme.fontBase }}>MIDI</span>
+        )}
+      </button>
 
       {/* Theme toggle */}
       <button

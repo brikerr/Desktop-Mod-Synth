@@ -10,7 +10,13 @@ export type ModuleType =
   | 'noise'
   | 'delay'
   | 'reverb'
-  | 'oscilloscope';
+  | 'oscilloscope'
+  | 'sampleHold'
+  | 'ringMod'
+  | 'quantizer'
+  | 'wavefolder'
+  | 'spectrum'
+  | 'stepSequencer';
 
 export type SignalType = 'audio' | 'cv' | 'gate';
 

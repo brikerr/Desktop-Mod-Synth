@@ -10,6 +10,12 @@ import noiseUrl from './processors/noise-processor.ts?url';
 import delayUrl from './processors/delay-processor.ts?url';
 import reverbUrl from './processors/reverb-processor.ts?url';
 import oscilloscopeUrl from './processors/oscilloscope-processor.ts?url';
+import sampleHoldUrl from './processors/sample-hold-processor.ts?url';
+import ringModUrl from './processors/ring-mod-processor.ts?url';
+import quantizerUrl from './processors/quantizer-processor.ts?url';
+import wavefolderUrl from './processors/wavefolder-processor.ts?url';
+import spectrumUrl from './processors/spectrum-processor.ts?url';
+import stepSequencerUrl from './processors/step-sequencer-processor.ts?url';
 
 const processorUrls = [
   vcoUrl,
@@ -24,6 +30,12 @@ const processorUrls = [
   delayUrl,
   reverbUrl,
   oscilloscopeUrl,
+  sampleHoldUrl,
+  ringModUrl,
+  quantizerUrl,
+  wavefolderUrl,
+  spectrumUrl,
+  stepSequencerUrl,
 ];
 
 export async function loadAllProcessors(ctx: AudioContext): Promise<void> {

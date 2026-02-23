@@ -15,6 +15,13 @@ import { createNoiseNode } from './nodes/noise-node.ts';
 import { createDelayNode } from './nodes/delay-node.ts';
 import { createReverbNode } from './nodes/reverb-node.ts';
 import { createOscilloscopeNode } from './nodes/oscilloscope-node.ts';
+import { createSampleHoldNode } from './nodes/sample-hold-node.ts';
+import { createRingModNode } from './nodes/ring-mod-node.ts';
+import { createQuantizerNode } from './nodes/quantizer-node.ts';
+import { createWavefolderNode } from './nodes/wavefolder-node.ts';
+import { createSpectrumNode } from './nodes/spectrum-node.ts';
+import { createStepSequencerNode } from './nodes/step-sequencer-node.ts';
+import { midiManager } from './midi-manager.ts';
 
 export class AudioEngine {
   private nodes = new Map<string, AudioWorkletNode>();
@@ -29,6 +36,7 @@ export class AudioEngine {
     if (this.initialized) return;
     const ctx = await initAudioContext();
     await loadAllProcessors(ctx);
+    await midiManager.init();
     this.initialized = true;
   }
 
@@ -40,6 +48,7 @@ export class AudioEngine {
       node.disconnect();
     }
     this.nodes.clear();
+    midiManager.shutdown();
     // Suspend the audio context
     const ctx = getAudioContext();
     await ctx.suspend();
@@ -90,6 +99,24 @@ export class AudioEngine {
         break;
       case 'oscilloscope':
         node = createOscilloscopeNode(ctx, params);
+        break;
+      case 'sampleHold':
+        node = createSampleHoldNode(ctx, params);
+        break;
+      case 'ringMod':
+        node = createRingModNode(ctx, params);
+        break;
+      case 'quantizer':
+        node = createQuantizerNode(ctx, params);
+        break;
+      case 'wavefolder':
+        node = createWavefolderNode(ctx, params);
+        break;
+      case 'spectrum':
+        node = createSpectrumNode(ctx, params);
+        break;
+      case 'stepSequencer':
+        node = createStepSequencerNode(ctx, params);
         break;
       default:
         throw new Error(`Unknown module type: ${type}`);

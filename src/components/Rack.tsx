@@ -17,6 +17,12 @@ import NoisePanel from './modules/NoisePanel.tsx';
 import DelayPanel from './modules/DelayPanel.tsx';
 import ReverbPanel from './modules/ReverbPanel.tsx';
 import OscilloscopePanel from './modules/OscilloscopePanel.tsx';
+import SampleHoldPanel from './modules/SampleHoldPanel.tsx';
+import RingModPanel from './modules/RingModPanel.tsx';
+import QuantizerPanel from './modules/QuantizerPanel.tsx';
+import WavefolderPanel from './modules/WavefolderPanel.tsx';
+import SpectrumPanel from './modules/SpectrumPanel.tsx';
+import StepSequencerPanel from './modules/StepSequencerPanel.tsx';
 
 const PANEL_MAP: Record<ModuleType, React.ComponentType<{ moduleId: string }>> = {
   vco: VCOPanel,
@@ -31,6 +37,12 @@ const PANEL_MAP: Record<ModuleType, React.ComponentType<{ moduleId: string }>> =
   delay: DelayPanel,
   reverb: ReverbPanel,
   oscilloscope: OscilloscopePanel,
+  sampleHold: SampleHoldPanel,
+  ringMod: RingModPanel,
+  quantizer: QuantizerPanel,
+  wavefolder: WavefolderPanel,
+  spectrum: SpectrumPanel,
+  stepSequencer: StepSequencerPanel,
 };
 
 const MIN_ZOOM = 0.25;

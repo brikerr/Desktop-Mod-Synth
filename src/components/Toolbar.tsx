@@ -49,11 +49,26 @@ const MODULE_GROUPS: ModuleGroup[] = [
 export function Toolbar() {
   const isAudioReady = useSynthStore((s) => s.isAudioReady);
   const initAudio = useSynthStore((s) => s.initAudio);
+  const shutdownAudio = useSynthStore((s) => s.shutdownAudio);
   const addModule = useSynthStore((s) => s.addModule);
   const addToast = useToastStore((s) => s.addToast);
   const theme = useTheme();
   const themeName = useThemeStore((s) => s.themeName);
   const toggleTheme = useThemeStore((s) => s.toggleTheme);
+
+  const handlePowerToggle = React.useCallback(async () => {
+    if (isAudioReady) {
+      const audio = new Audio('/power-down.wav');
+      audio.volume = 0.5;
+      audio.play().catch(() => {});
+      await shutdownAudio();
+    } else {
+      await initAudio();
+      const audio = new Audio('/power-up.wav');
+      audio.volume = 0.5;
+      audio.play().catch(() => {});
+    }
+  }, [isAudioReady, initAudio, shutdownAudio]);
 
   const handleAddModule = React.useCallback((type: ModuleType) => {
     addModule(type);
@@ -99,34 +114,26 @@ export function Toolbar() {
       flexShrink: 0,
       borderBottom: `1px solid ${theme.borderSubtle}`,
     }}>
-      {isAudioReady ? (
-        <span style={{
-          color: theme.audioReady,
-          fontSize: 12,
-          fontWeight: 600,
-          fontFamily: theme.fontBase,
-          marginRight: 6,
-        }}>Audio Ready</span>
-      ) : (
-        <button
-          style={{
-            ...buttonBase,
-            background: theme.accent,
-            border: `1px solid ${theme.accentHover}`,
-            color: '#fff',
-            fontWeight: 600,
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = theme.accentHover;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = theme.accent;
-          }}
-          onClick={() => initAudio()}
-        >
-          Start Audio
-        </button>
-      )}
+      <button
+        style={{
+          width: 36,
+          height: 36,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: isAudioReady ? `${theme.audioReady}20` : theme.bgControl,
+          border: `2px solid ${isAudioReady ? theme.audioReady : theme.borderSubtle}`,
+          borderRadius: '50%',
+          color: isAudioReady ? theme.audioReady : theme.textMuted,
+          cursor: 'pointer',
+          padding: 0,
+          transition: 'all 0.2s',
+        }}
+        onClick={handlePowerToggle}
+        title={isAudioReady ? 'Power off — stop audio engine' : 'Power on — start audio engine'}
+      >
+        <span className="material-symbols-outlined" style={{ fontSize: 22 }}>power_settings_new</span>
+      </button>
 
       <div style={{ width: 1, height: 28, background: theme.borderSubtle, marginLeft: 4, marginRight: 4 }} />
 
@@ -181,14 +188,17 @@ export function Toolbar() {
       <button
         style={{
           ...buttonBase,
-          fontSize: 16,
-          padding: '2px 8px',
+          padding: '4px 8px',
           lineHeight: 1,
+          display: 'flex',
+          alignItems: 'center',
         }}
         onClick={toggleTheme}
         title={`Switch to ${themeName === 'dark' ? 'light' : 'dark'} mode`}
       >
-        {themeName === 'dark' ? '\u263C' : '\u263E'}
+        <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+          {themeName === 'dark' ? 'light_mode' : 'dark_mode'}
+        </span>
       </button>
     </div>
   );

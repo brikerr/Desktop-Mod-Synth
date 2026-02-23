@@ -32,6 +32,20 @@ export class AudioEngine {
     this.initialized = true;
   }
 
+  async shutdown(): Promise<void> {
+    if (!this.initialized) return;
+    // Disconnect and remove all nodes
+    for (const [id, node] of this.nodes) {
+      this.connectionManager.disconnectAllForModule(id);
+      node.disconnect();
+    }
+    this.nodes.clear();
+    // Suspend the audio context
+    const ctx = getAudioContext();
+    await ctx.suspend();
+    this.initialized = false;
+  }
+
   isReady(): boolean {
     return this.initialized;
   }

@@ -27,6 +27,7 @@ interface SynthStore {
   pendingCable: PendingCable | null;
 
   initAudio: () => Promise<void>;
+  shutdownAudio: () => Promise<void>;
   addModule: (type: ModuleType) => string;
   addModuleAt: (type: ModuleType, x: number, y: number) => string;
   removeModule: (id: string) => void;
@@ -58,6 +59,18 @@ export const useSynthStore = create<SynthStore>((set, get) => ({
       }
     } catch (err) {
       console.error('Failed to initialize audio:', err);
+    }
+  },
+
+  shutdownAudio: async () => {
+    try {
+      await audioEngine.shutdown();
+      set({ isAudioReady: false, modules: {}, connections: {}, pendingCable: null });
+      nextModuleId = 1;
+      nextConnectionId = 1;
+      nextModuleX = 60;
+    } catch (err) {
+      console.error('Failed to shutdown audio:', err);
     }
   },
 

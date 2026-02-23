@@ -27,6 +27,7 @@ const ModulePanel: React.FC<ModulePanelProps> = ({ moduleId, children }) => {
   );
   const labelRef = useRef<HTMLSpanElement>(null);
   const [labelHoverRect, setLabelHoverRect] = useState<DOMRect | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
@@ -43,6 +44,7 @@ const ModulePanel: React.FC<ModulePanelProps> = ({ moduleId, children }) => {
 
   const handleMouseUp = useCallback(() => {
     dragRef.current = null;
+    setIsDragging(false);
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
     document.body.style.cursor = '';
@@ -58,6 +60,7 @@ const ModulePanel: React.FC<ModulePanelProps> = ({ moduleId, children }) => {
         origX: module.x,
         origY: module.y,
       };
+      setIsDragging(true);
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
       document.body.style.cursor = 'grabbing';
@@ -94,10 +97,12 @@ const ModulePanel: React.FC<ModulePanelProps> = ({ moduleId, children }) => {
         minWidth: 200,
         background: theme.bgPanel,
         borderRadius: theme.borderRadius,
-        border: `1px solid ${theme.borderSubtle}`,
+        border: `1px solid ${isDragging ? colors.primary : theme.borderSubtle}`,
+        boxShadow: isDragging ? `0 0 12px ${colors.primary}40` : 'none',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
+        transition: 'border-color 0.15s, box-shadow 0.15s',
       }}>
         <div
           style={{
@@ -145,15 +150,16 @@ const ModulePanel: React.FC<ModulePanelProps> = ({ moduleId, children }) => {
               background: 'none',
               border: 'none',
               color: theme.deleteButton,
-              fontSize: 14,
               cursor: 'pointer',
-              padding: '0 4px',
+              padding: 0,
               lineHeight: 1,
+              display: 'flex',
+              alignItems: 'center',
             }}
             onClick={handleDelete}
             title="Remove module"
           >
-            X
+            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>close_small</span>
           </button>
         </div>
 

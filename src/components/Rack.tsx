@@ -106,6 +106,20 @@ export function Rack() {
     setZoom((prev) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, prev + delta * prev)));
   }, []);
 
+  const zoomIn = useCallback(() => {
+    setZoom((prev) => Math.min(MAX_ZOOM, prev * 1.25));
+  }, []);
+
+  const zoomOut = useCallback(() => {
+    setZoom((prev) => Math.max(MIN_ZOOM, prev / 1.25));
+  }, []);
+
+  const zoomReset = useCallback(() => {
+    setZoom(1);
+    setPanX(0);
+    setPanY(0);
+  }, []);
+
   const moduleList = Object.values(modules);
 
   return (
@@ -143,6 +157,76 @@ export function Rack() {
           );
         })}
         <Cables containerRef={innerRef} />
+      </div>
+
+      {/* Zoom controls */}
+      <div style={{
+        position: 'absolute',
+        bottom: 16,
+        right: 16,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 4,
+        alignItems: 'center',
+        zIndex: 100,
+      }}>
+        <button
+          onClick={zoomIn}
+          title="Zoom in"
+          style={{
+            width: 32,
+            height: 32,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: theme.bgPanel,
+            border: `1px solid ${theme.borderSubtle}`,
+            borderRadius: theme.borderRadius,
+            color: theme.textPrimary,
+            cursor: 'pointer',
+          }}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: 20 }}>add</span>
+        </button>
+        <button
+          onClick={zoomReset}
+          title="Reset view"
+          style={{
+            width: 32,
+            height: 32,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: theme.bgPanel,
+            border: `1px solid ${theme.borderSubtle}`,
+            borderRadius: theme.borderRadius,
+            color: theme.textSecondary,
+            cursor: 'pointer',
+            fontFamily: theme.fontBase,
+            fontSize: 9,
+            padding: 0,
+          }}
+        >
+          {Math.round(zoom * 100)}%
+        </button>
+        <button
+          onClick={zoomOut}
+          title="Zoom out"
+          style={{
+            width: 32,
+            height: 32,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: theme.bgPanel,
+            border: `1px solid ${theme.borderSubtle}`,
+            borderRadius: theme.borderRadius,
+            color: theme.textPrimary,
+            cursor: 'pointer',
+          }}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: 20 }}>remove</span>
+        </button>
       </div>
     </div>
   );

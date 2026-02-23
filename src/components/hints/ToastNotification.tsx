@@ -1,42 +1,41 @@
 import React from 'react';
 import { useToastStore } from '../../store/toast-store.ts';
+import { useTheme } from '../../store/theme-store.ts';
 import { moduleColors } from '../../styles/module-colors.ts';
-
-const containerStyle: React.CSSProperties = {
-  position: 'fixed',
-  bottom: 140,
-  right: 16,
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 8,
-  zIndex: 9999,
-  pointerEvents: 'none',
-};
 
 const ToastContainer: React.FC = () => {
   const toasts = useToastStore((s) => s.toasts);
   const removeToast = useToastStore((s) => s.removeToast);
+  const theme = useTheme();
 
   if (toasts.length === 0) return null;
 
   return (
-    <div style={containerStyle}>
+    <div style={{
+      position: 'fixed',
+      bottom: 140,
+      right: 16,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 8,
+      zIndex: 9999,
+      pointerEvents: 'none',
+    }}>
       {toasts.map((toast) => {
         const color = moduleColors[toast.moduleType]?.primary ?? '#888';
         return (
           <div
             key={toast.id}
             style={{
-              background: '#1a1a2eee',
-              border: '1px solid rgba(255,255,255,0.1)',
+              background: theme.tooltipBg,
+              border: `1px solid ${theme.tooltipBorder}`,
               borderLeft: `3px solid ${color}`,
-              borderRadius: 6,
+              borderRadius: theme.borderRadius,
               padding: '8px 12px',
               maxWidth: 300,
-              boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
-              fontFamily: 'sans-serif',
-              fontSize: 11,
-              color: '#d0d0e0',
+              fontFamily: theme.fontBase,
+              fontSize: theme.fontSize,
+              color: theme.textPrimary,
               lineHeight: 1.4,
               pointerEvents: 'auto',
               animation: 'toast-slide-in 0.25s ease-out',
@@ -49,15 +48,16 @@ const ToastContainer: React.FC = () => {
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: '#808098',
+                  color: theme.textMuted,
                   cursor: 'pointer',
-                  fontSize: 14,
                   lineHeight: 1,
                   padding: 0,
                   flexShrink: 0,
+                  display: 'flex',
+                  alignItems: 'center',
                 }}
               >
-                ×
+                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>close_small</span>
               </button>
             </div>
           </div>
